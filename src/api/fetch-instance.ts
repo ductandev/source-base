@@ -1,5 +1,5 @@
 import { IResponseApi } from '@/types/common';
-import { ROUTES } from '../routes';
+import { ROUTES } from '@/utils/routes';
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080/api';

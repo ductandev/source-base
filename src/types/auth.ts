@@ -33,11 +33,11 @@ export interface ISimulationRequest {
   location: LocationData | null;
 }
 export interface ISimulatioResponse {
-  disasterType: DisasterType;
-  rainfallIntensity: string;
-  duration: number;
-  windSpeed?: number;
-  magnitude?: number;
-  fireSpreadRate?: number;
-  location: LocationData | null;
+  simulationId: string;
+  input: SimulationInput;
+  map: SimulationMap;
+  kpis: SimulationKPIs;
+  topActions: SimulationTopAction[];
+  responsePlan: SimulationResponsePlan;
+  generatedAt: string; // ISO
 }

@@ -10,7 +10,7 @@ import { useLocationStore } from "@/stores/locationStore";
 import { showErrorToast, showSuccessToast } from "@/common/toastify";
 import { useRouter } from "next/navigation";
 import { useSimulation } from "@/api/simulation";
-import { useSimulationResultStore } from "@/stores/SimulationStore";
+import { useSimulationStore } from "@/stores/SimulationStore";
 
 import {
   Card,
@@ -32,7 +32,10 @@ import type { DisasterType, SimulationConfig } from "./_components/types";
 export default function SimulationConfig() {
   const { locationData } = useLocationStore();
   const router = useRouter();
-  const setResult = useSimulationResultStore((s) => s.setResult);
+
+  const setCurrentSimulation = useSimulationStore(
+    (s) => s.setCurrentSimulation,
+  );
   const [isPending, startTransition] = useTransition();
   const [config, setConfig] = useState<SimulationConfig>({
     ...DEFAULT_SIMULATION_CONFIG,
@@ -55,14 +58,13 @@ export default function SimulationConfig() {
     startTransition(() => {
       (async () => {
         try {
-          console.log(config);
           if (config.location) {
             const data = await mutateSimulation(config);
-            setResult(data);
+            setCurrentSimulation(data);
             showSuccessToast("Simulation Successful");
           }
 
-          //   router.push(ROUTES.SIMULATION_RESULT);
+          router.push(ROUTES.SIMULATION_RESULT);
         } catch (err) {
           if (axios.isAxiosError(err)) {
             const status = err.response?.status;
@@ -75,7 +77,7 @@ export default function SimulationConfig() {
         }
       })();
     });
-  }, [config, mutateSimulation, setResult, router, startTransition]);
+  }, [config, mutateSimulation, setCurrentSimulation, router, startTransition]);
 
   return (
     <div className="min-h-screen bg-neutral-50">

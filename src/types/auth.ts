@@ -1,3 +1,4 @@
+export type DisasterType = "flood" | "earthquake" | "hurricane" | "wildfire";
 export interface ILoginRequest {
   email: string;
   password: string;
@@ -10,4 +11,23 @@ export interface ILoginResponse {
   creDt: Date;
   updUsrId: string;
   updDt: Date;
+}
+
+export interface ISimulationRequest {
+  disasterType: DisasterType;
+  rainfallIntensity: string;
+  duration: number;
+  windSpeed?: number;
+  magnitude?: number;
+  fireSpreadRate?: number;
+  location: string;
+}
+export interface ISimulatioResponse {
+  disasterType: DisasterType;
+  rainfallIntensity: string;
+  duration: number;
+  windSpeed?: number;
+  magnitude?: number;
+  fireSpreadRate?: number;
+  location: string;
 }

@@ -1,4 +1,14 @@
 export type DisasterType = "flood" | "earthquake" | "hurricane" | "wildfire";
+export interface LocationData {
+  name: string;
+  country: string;
+  countryCode?: string;
+  state?: string;
+  lat: number;
+  lon: number;
+  displayName: string;
+  localNames?: Record<string, string>;
+}
 export interface ILoginRequest {
   email: string;
   password: string;
@@ -20,7 +30,7 @@ export interface ISimulationRequest {
   windSpeed?: number;
   magnitude?: number;
   fireSpreadRate?: number;
-  location: string;
+  location: LocationData | null;
 }
 export interface ISimulatioResponse {
   disasterType: DisasterType;
@@ -29,5 +39,5 @@ export interface ISimulatioResponse {
   windSpeed?: number;
   magnitude?: number;
   fireSpreadRate?: number;
-  location: string;
+  location: LocationData | null;
 }

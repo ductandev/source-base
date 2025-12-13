@@ -1,18 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import svgPaths from "../common/imports/svg-gzld84qnt4";
 import { Eye, EyeOff } from "lucide-react";
+import { useLogin } from "@/api/auth";
+import { ROUTES } from "@/utils/routes";
+import axios from "axios";
+import { showErrorToast, showSuccessToast } from "@/common/toastify";
+import { useRouter } from "next/navigation";
 
 export default function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const { mutateAsync: mutateLogin } = useLogin();
+
+  // const handleLogin = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   console.log("Login attempted with:", { email, password });
+  // };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempted with:", { email, password });
-    // Add your login logic here
+
+    startTransition(async () => {
+      try {
+        // await mutateLogin({
+        //   email: email,
+        //   password: password,
+        // });
+
+        showSuccessToast("Login Successful");
+        router.push(ROUTES.HOME);
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          const errorStatus = err.response?.status;
+
+          if (errorStatus === 403) {
+            showErrorToast("403");
+            return;
+          }
+
+          showErrorToast("Login Fail. Please try again");
+        }
+      }
+    });
   };
 
   const handleGoogleLogin = () => {
@@ -136,6 +171,7 @@ export default function App() {
                     <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
                       <button
                         type="submit"
+                        disabled={isPending}
                         className="bg-[#46a758] h-[36px] relative rounded-[8px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.1)] shrink-0 w-full hover:bg-[#3d9249] transition-colors"
                       >
                         <div className="flex flex-col items-center justify-center size-full">

@@ -1,77 +1,167 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import {
-  Search,
-  MapPin,
-  Crosshair,
-  Plus,
-  Minus,
-  Navigation,
-  Locate,
-} from "lucide-react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { Search, MapPin, Crosshair, Locate, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-const imgMap = "../../../../public/assets/maps.png";
-import {
-  DEFAULT_LOCATION,
-  SAMPLE_RECENT_PLACES,
-} from "@/app/simulation-picker/hooks/constants";
+import GoongMap from "./GoongMap";
 import { useGeolocation } from "../hooks/useGeolocation";
-import { ImageWithFallback } from "@/common/ImageWithFallback";
 import { LocationData } from "@/types/simulation";
-import { searchAddress } from "@/api/simulation/goongSearch";
-import GoongMap from "@/app/simulation-picker/_components/GoongMap";
+import { useGoongAutocomplete } from "@/api/simulation/useGoong";
+import { goongService, GoongPrediction } from "@/api/simulation/goong-service";
+import { useDebounce } from "@/app/simulation-picker/hooks/useDebounce";
+import { useLocationStore as useWeatherLocationStore } from "@/stores/locationStore";
+
+// Convert Weather LocationData to Simulation LocationData
+function convertWeatherToSimulationLocation(
+  weatherLocation: any,
+): LocationData | null {
+  if (!weatherLocation) return null;
+
+  return {
+    address: weatherLocation.displayName || weatherLocation.name,
+    coordinates: {
+      lat: weatherLocation.lat,
+      lng: weatherLocation.lon,
+    },
+  };
+}
 
 export default function LocationPicker() {
-  const [location, setLocation] = useState<LocationData>(DEFAULT_LOCATION);
+  // ⚠️ CRITICAL: Lấy location từ weather locationStore (đã lưu từ home)
+  const { locationData: weatherLocationData } = useWeatherLocationStore();
 
+  // Convert và set initial location
+  const initialLocation = convertWeatherToSimulationLocation(
+    weatherLocationData,
+  ) || {
+    address: "Tân Bình, Viet Nam",
+    coordinates: { lat: 12.7106, lng: 108.2183 },
+  };
+
+  const [location, setLocation] = useState<LocationData>(initialLocation);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+
+  const debouncedQuery = useDebounce(searchQuery, 800);
+
   const {
-    coordinates,
+    coordinates: currentCoords,
     loading: geoLoading,
     getCurrentLocation,
   } = useGeolocation();
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
+  // Search autocomplete
+  const { data: searchResults, isLoading: isLoadingSearch } =
+    useGoongAutocomplete(
+      debouncedQuery,
+      debouncedQuery.length >= 3 && isSearching,
+    );
 
-    if (!query) return;
+  const reverseGeocodeTimeout = useRef<NodeJS.Timeout | null>(null);
+  const lastReverseGeocodeTime = useRef<number>(0);
+  const MIN_REVERSE_GEOCODE_INTERVAL = 2000;
 
-    const result = await searchAddress(query);
-    if (!result) return;
+  // Log để debug
+  useEffect(() => {
+    console.log("🎯 Weather Location Data:", weatherLocationData);
+    console.log("📍 Initial Location:", initialLocation);
+  }, []);
 
-    setLocation({
-      address: result.formatted_address,
-      coordinates: {
-        lat: result.geometry.location.lat,
-        lng: result.geometry.location.lng,
-      },
-    });
-  };
+  // ⚠️ DEBOUNCED reverse geocode
+  const handleLocationChange = useCallback(
+    async (newLocation: LocationData) => {
+      setLocation(newLocation);
+
+      if (reverseGeocodeTimeout.current) {
+        clearTimeout(reverseGeocodeTimeout.current);
+      }
+
+      reverseGeocodeTimeout.current = setTimeout(async () => {
+        const now = Date.now();
+        const timeSinceLastCall = now - lastReverseGeocodeTime.current;
+
+        if (timeSinceLastCall < MIN_REVERSE_GEOCODE_INTERVAL) {
+          console.log("⏱️ Rate limited - skipping reverse geocode");
+          return;
+        }
+
+        try {
+          lastReverseGeocodeTime.current = now;
+          console.log("🌍 Calling reverse geocode API...");
+
+          const place = await goongService.reverseGeocode(
+            newLocation.coordinates.lat,
+            newLocation.coordinates.lng,
+          );
+
+          if (place) {
+            setLocation({
+              address: place.formatted_address,
+              coordinates: newLocation.coordinates,
+            });
+          }
+        } catch (error) {
+          console.error("Reverse geocode error:", error);
+        }
+      }, 2000);
+    },
+    [],
+  );
+
+  // Handle search select
+  const handleSelectPlace = useCallback(async (prediction: GoongPrediction) => {
+    setSearchQuery(prediction.description);
+    setIsSearching(false);
+
+    try {
+      const place = await goongService.getPlaceDetail(prediction.place_id);
+      if (place) {
+        setLocation({
+          address: place.formatted_address,
+          coordinates: {
+            lat: place.geometry.location.lat,
+            lng: place.geometry.location.lng,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Get place detail error:", error);
+    }
+  }, []);
+
+  // Handle current location
+  const handleUseCurrentLocation = useCallback(async () => {
+    if (currentCoords) {
+      try {
+        const place = await goongService.reverseGeocode(
+          currentCoords.lat,
+          currentCoords.lng,
+        );
+        setLocation({
+          address: place?.formatted_address || "Current Location",
+          coordinates: currentCoords,
+        });
+      } catch (error) {
+        setLocation({
+          address: "Current Location",
+          coordinates: currentCoords,
+        });
+      }
+    } else {
+      getCurrentLocation();
+    }
+  }, [currentCoords, getCurrentLocation]);
 
   const handleConfirmLocation = useCallback(() => {
-    console.log("Location confirmed:", location);
-    // Add your location confirmation logic here
+    console.log("✅ Location confirmed:", location);
+    // TODO: Save to store or navigate back with location data
   }, [location]);
 
   const handleRecenter = useCallback(() => {
-    console.log("Recentering map");
-    // Add your recenter logic here
-  }, []);
-
-  const handleUseCurrentLocation = useCallback(() => {
-    if (!coordinates) {
-      getCurrentLocation();
-      return;
-    }
-
-    setLocation({
-      address: "Current location",
-      coordinates,
-    });
-  }, [coordinates, getCurrentLocation]);
+    setLocation({ ...location });
+  }, [location]);
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -80,11 +170,23 @@ export default function LocationPicker() {
         <MobileLayout
           location={location}
           searchQuery={searchQuery}
-          onSearchChange={handleSearch}
+          onSearchChange={(query) => {
+            setSearchQuery(query);
+            setIsSearching(query.length >= 3);
+          }}
+          onLocationChange={handleLocationChange}
           onConfirm={handleConfirmLocation}
           onRecenter={handleRecenter}
           onUseCurrentLocation={handleUseCurrentLocation}
           geoLoading={geoLoading}
+          searchResults={searchResults || []}
+          isLoadingSearch={isLoadingSearch}
+          isSearching={isSearching}
+          onSelectPlace={handleSelectPlace}
+          onClearSearch={() => {
+            setSearchQuery("");
+            setIsSearching(false);
+          }}
         />
       </div>
 
@@ -93,11 +195,23 @@ export default function LocationPicker() {
         <DesktopLayout
           location={location}
           searchQuery={searchQuery}
-          onSearchChange={handleSearch}
+          onSearchChange={(query) => {
+            setSearchQuery(query);
+            setIsSearching(query.length >= 3);
+          }}
+          onLocationChange={handleLocationChange}
           onConfirm={handleConfirmLocation}
           onRecenter={handleRecenter}
           onUseCurrentLocation={handleUseCurrentLocation}
           geoLoading={geoLoading}
+          searchResults={searchResults || []}
+          isLoadingSearch={isLoadingSearch}
+          isSearching={isSearching}
+          onSelectPlace={handleSelectPlace}
+          onClearSearch={() => {
+            setSearchQuery("");
+            setIsSearching(false);
+          }}
         />
       </div>
     </div>
@@ -108,33 +222,53 @@ interface LayoutProps {
   location: LocationData;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  onLocationChange: (location: LocationData) => void;
   onConfirm: () => void;
   onRecenter: () => void;
   onUseCurrentLocation: () => void;
   geoLoading: boolean;
+  searchResults: GoongPrediction[];
+  isLoadingSearch: boolean;
+  isSearching: boolean;
+  onSelectPlace: (place: GoongPrediction) => void;
+  onClearSearch: () => void;
 }
 
 function MobileLayout({
   location,
   searchQuery,
   onSearchChange,
+  onLocationChange,
   onConfirm,
   onRecenter,
   onUseCurrentLocation,
   geoLoading,
+  searchResults,
+  isLoadingSearch,
+  isSearching,
+  onSelectPlace,
+  onClearSearch,
 }: LayoutProps) {
   return (
     <div className="relative h-screen flex flex-col">
-      {/* Status Bar */}
-      <StatusBar />
-
       {/* Map Container */}
       <div className="relative flex-1">
-        <GoongMap location={location} onChangeLocation={setLocation} />
+        <GoongMap location={location} onChangeLocation={onLocationChange} />
 
         {/* Search Bar - Floating */}
         <div className="absolute top-4 left-4 right-4 z-10">
-          <SearchBar value={searchQuery} onChange={onSearchChange} />
+          <SearchBar
+            value={searchQuery}
+            onChange={onSearchChange}
+            onClear={onClearSearch}
+          />
+          {isSearching && (
+            <SearchResults
+              results={searchResults}
+              isLoading={isLoadingSearch}
+              onSelect={onSelectPlace}
+            />
+          )}
         </div>
 
         {/* Center Pin Indicator */}
@@ -158,10 +292,16 @@ function DesktopLayout({
   location,
   searchQuery,
   onSearchChange,
+  onLocationChange,
   onConfirm,
   onRecenter,
   onUseCurrentLocation,
   geoLoading,
+  searchResults,
+  isLoadingSearch,
+  isSearching,
+  onSelectPlace,
+  onClearSearch,
 }: LayoutProps) {
   return (
     <div className="h-screen flex">
@@ -172,14 +312,26 @@ function DesktopLayout({
           <h1 className="text-2xl font-semibold text-neutral-950 mb-4">
             Location Picker
           </h1>
-          <SearchBar value={searchQuery} onChange={onSearchChange} fullWidth />
+          <div className="relative">
+            <SearchBar
+              value={searchQuery}
+              onChange={onSearchChange}
+              onClear={onClearSearch}
+              fullWidth
+            />
+            {isSearching && (
+              <SearchResults
+                results={searchResults}
+                isLoading={isLoadingSearch}
+                onSelect={onSelectPlace}
+              />
+            )}
+          </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <LocationDetails location={location} />
-          <RecentLocations />
-          <SavedPlaces />
         </div>
 
         {/* Footer */}
@@ -197,7 +349,7 @@ function DesktopLayout({
 
       {/* Map Area */}
       <main className="flex-1 relative">
-        <GoongMap location={location} onChangeLocation={setLocation} />
+        <GoongMap location={location} onChangeLocation={onLocationChange} />
         <CenterPinIndicator />
         <MapControls
           onRecenter={onRecenter}
@@ -205,25 +357,8 @@ function DesktopLayout({
           geoLoading={geoLoading}
           position="right"
         />
-
-        {/* Coordinates Display */}
         <CoordinatesDisplay coordinates={location.coordinates} />
       </main>
-    </div>
-  );
-}
-
-function StatusBar() {
-  return (
-    <div className="bg-white px-6 py-3 flex items-center justify-between border-b border-neutral-100">
-      <span className="text-neutral-950 font-medium">9:41</span>
-      <div className="flex items-center gap-2">
-        <div className="size-4 text-neutral-700">
-          <svg fill="currentColor" viewBox="0 0 18 10">
-            <path d="M2 6C2.55228 6 3 6.44772 3 7V9C3 9.55228 2.55228 10 2 10H1C0.447715 10 0 9.55228 0 9V7C0 6.44772 0.447715 6 1 6H2ZM7 4C7.55228 4 8 4.44772 8 5V9C8 9.55228 7.55228 10 7 10H6C5.44772 10 5 9.55228 5 9V5C5 4.44772 5.44772 4 6 4H7ZM12 2C12.5523 2 13 2.42979 13 2.95996V9.04004C13 9.57021 12.5523 10 12 10H11C10.4478 9.99994 10 9.57018 10 9.04004V2.95996C10 2.42982 10.4478 2.00006 11 2H12ZM17 0C17.5523 0 18 0.419733 18 0.9375V9.0625C18 9.58027 17.5523 10 17 10H16C15.4477 10 15 9.58027 15 9.0625V0.9375C15 0.419733 15.4477 0 16 0H17Z" />
-          </svg>
-        </div>
-      </div>
     </div>
   );
 }
@@ -231,34 +366,77 @@ function StatusBar() {
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
+  onClear: () => void;
   fullWidth?: boolean;
 }
 
-function SearchBar({ value, onChange, fullWidth }: SearchBarProps) {
+function SearchBar({ value, onChange, onClear, fullWidth }: SearchBarProps) {
   return (
     <div className={`relative ${fullWidth ? "w-full" : ""}`}>
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-neutral-500" />
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-neutral-500 z-10" />
       <Input
         type="text"
-        placeholder="Search address, coordinates..."
+        placeholder="Search address, place..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="pl-10 h-10 bg-white border-neutral-200 focus:border-neutral-400 focus:ring-neutral-400"
+        className="pl-10 pr-10 h-10 bg-white border-neutral-200 focus:border-neutral-400 focus:ring-neutral-400"
         aria-label="Search location"
       />
+      {value && (
+        <button
+          onClick={onClear}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 z-10"
+        >
+          <X className="size-4" />
+        </button>
+      )}
     </div>
   );
 }
 
-function MapView() {
+interface SearchResultsProps {
+  results: GoongPrediction[];
+  isLoading: boolean;
+  onSelect: (place: GoongPrediction) => void;
+}
+
+function SearchResults({ results, isLoading, onSelect }: SearchResultsProps) {
   return (
-    <div className="absolute inset-0">
-      <iframe
-        src="https://maps.goong.io/maps/embed?mid=36ab2924-22f6-454a-b032-6343df19ab3f&lat=10.805711998860659&long=106.65323825762289&z=14"
-        className="w-full h-full"
-        style={{ border: 0 }}
-        loading="lazy"
-      />
+    <div className="absolute top-full mt-2 left-0 right-0 bg-white rounded-lg shadow-lg border border-neutral-200 max-h-80 overflow-y-auto z-20">
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="size-5 text-[#94ce9a] animate-spin" />
+          <span className="ml-2 text-sm text-neutral-600">Searching...</span>
+        </div>
+      )}
+
+      {!isLoading && results.length === 0 && (
+        <div className="text-center py-8 text-neutral-500">
+          <p className="text-sm">No results found</p>
+        </div>
+      )}
+
+      {!isLoading && results.length > 0 && (
+        <div className="py-2">
+          {results.map((result) => (
+            <button
+              key={result.place_id}
+              onClick={() => onSelect(result)}
+              className="w-full flex items-start gap-3 px-4 py-3 hover:bg-neutral-50 transition-colors text-left"
+            >
+              <MapPin className="size-4 text-[#94ce9a] mt-1 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-neutral-900 truncate">
+                  {result.structured_formatting.main_text}
+                </p>
+                <p className="text-xs text-neutral-500 truncate mt-0.5">
+                  {result.structured_formatting.secondary_text}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -302,22 +480,6 @@ function MapControls({
         variant="secondary"
         size="icon"
         className="size-10 bg-white hover:bg-neutral-100 shadow-md"
-        aria-label="Zoom in"
-      >
-        <Plus className="size-5" />
-      </Button>
-      <Button
-        variant="secondary"
-        size="icon"
-        className="size-10 bg-white hover:bg-neutral-100 shadow-md"
-        aria-label="Zoom out"
-      >
-        <Minus className="size-5" />
-      </Button>
-      <Button
-        variant="secondary"
-        size="icon"
-        className="size-10 bg-white hover:bg-neutral-100 shadow-md"
         onClick={onRecenter}
         aria-label="Recenter map"
       >
@@ -331,7 +493,11 @@ function MapControls({
         aria-label="Current location"
         disabled={geoLoading}
       >
-        <Locate className="size-5" />
+        {geoLoading ? (
+          <Loader2 className="size-5 animate-spin" />
+        ) : (
+          <Locate className="size-5" />
+        )}
       </Button>
     </div>
   );
@@ -350,13 +516,15 @@ function BottomSheet({ location, onConfirm }: BottomSheetProps) {
         <div className="w-12 h-1 bg-neutral-300 rounded-full" />
 
         {/* Content */}
-        <div className="text-center space-y-1">
+        <div className="w-full text-center space-y-2">
           <h2 className="text-base font-semibold text-neutral-900">
-            Pin Location
+            Selected Location
           </h2>
-          <p className="text-sm text-neutral-500">
-            Move the map to place the pin precisely
-          </p>
+          <p className="text-sm text-neutral-600 px-4">{location.address}</p>
+          <div className="flex items-center justify-center gap-4 text-xs text-neutral-500">
+            <span>Lat: {location.coordinates.lat.toFixed(6)}</span>
+            <span>Lng: {location.coordinates.lng.toFixed(6)}</span>
+          </div>
         </div>
 
         {/* Action Button */}
@@ -366,9 +534,6 @@ function BottomSheet({ location, onConfirm }: BottomSheetProps) {
         >
           Confirm Location
         </Button>
-
-        {/* Home Indicator */}
-        <div className="w-[148px] h-1 bg-neutral-900 rounded-full mt-2" />
       </div>
     </div>
   );
@@ -391,69 +556,18 @@ function LocationDetails({ location }: { location: LocationData }) {
           <div>
             <p className="text-xs text-neutral-500">Latitude</p>
             <p className="text-sm font-medium text-neutral-900">
-              {location.coordinates.lat}
+              {location.coordinates.lat.toFixed(6)}
             </p>
           </div>
           <div>
             <p className="text-xs text-neutral-500">Longitude</p>
             <p className="text-sm font-medium text-neutral-900">
-              {location.coordinates.lng}
+              {location.coordinates.lng.toFixed(6)}
             </p>
           </div>
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function RecentLocations() {
-  const recentPlaces = SAMPLE_RECENT_PLACES;
-
-  return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-neutral-900">
-        Recent Locations
-      </h3>
-      <div className="space-y-2">
-        {recentPlaces.map((place, index) => (
-          <button
-            key={index}
-            className="w-full text-left p-3 rounded-lg border border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
-          >
-            <p className="text-sm font-medium text-neutral-900">{place.name}</p>
-            <p className="text-xs text-neutral-500 mt-0.5">{place.address}</p>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SavedPlaces() {
-  return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-neutral-900">Saved Places</h3>
-      <div className="space-y-2">
-        <button className="w-full flex items-center gap-3 p-3 rounded-lg border border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 transition-colors">
-          <div className="size-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-            <Navigation className="size-4 text-blue-600" />
-          </div>
-          <div className="flex-1 text-left">
-            <p className="text-sm font-medium text-neutral-900">Home</p>
-            <p className="text-xs text-neutral-500">Add home address</p>
-          </div>
-        </button>
-        <button className="w-full flex items-center gap-3 p-3 rounded-lg border border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 transition-colors">
-          <div className="size-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-            <MapPin className="size-4 text-purple-600" />
-          </div>
-          <div className="flex-1 text-left">
-            <p className="text-sm font-medium text-neutral-900">Work</p>
-            <p className="text-xs text-neutral-500">Add work address</p>
-          </div>
-        </button>
-      </div>
-    </div>
   );
 }
 

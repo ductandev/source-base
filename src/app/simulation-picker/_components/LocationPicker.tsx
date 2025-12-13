@@ -21,6 +21,8 @@ import {
 import { useGeolocation } from "../hooks/useGeolocation";
 import { ImageWithFallback } from "@/common/ImageWithFallback";
 import { LocationData } from "@/types/simulation";
+import { searchAddress } from "@/api/simulation/goongSearch";
+import GoongMap from "@/app/simulation-picker/_components/GoongMap";
 
 export default function LocationPicker() {
   const [location, setLocation] = useState<LocationData>(DEFAULT_LOCATION);
@@ -31,6 +33,23 @@ export default function LocationPicker() {
     loading: geoLoading,
     getCurrentLocation,
   } = useGeolocation();
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+
+    if (!query) return;
+
+    const result = await searchAddress(query);
+    if (!result) return;
+
+    setLocation({
+      address: result.formatted_address,
+      coordinates: {
+        lat: result.geometry.location.lat,
+        lng: result.geometry.location.lng,
+      },
+    });
+  };
 
   const handleConfirmLocation = useCallback(() => {
     console.log("Location confirmed:", location);
@@ -43,14 +62,15 @@ export default function LocationPicker() {
   }, []);
 
   const handleUseCurrentLocation = useCallback(() => {
-    if (coordinates) {
-      setLocation({
-        address: "Current Location",
-        coordinates,
-      });
-    } else {
+    if (!coordinates) {
       getCurrentLocation();
+      return;
     }
+
+    setLocation({
+      address: "Current location",
+      coordinates,
+    });
   }, [coordinates, getCurrentLocation]);
 
   return (
@@ -60,7 +80,7 @@ export default function LocationPicker() {
         <MobileLayout
           location={location}
           searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+          onSearchChange={handleSearch}
           onConfirm={handleConfirmLocation}
           onRecenter={handleRecenter}
           onUseCurrentLocation={handleUseCurrentLocation}
@@ -73,7 +93,7 @@ export default function LocationPicker() {
         <DesktopLayout
           location={location}
           searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+          onSearchChange={handleSearch}
           onConfirm={handleConfirmLocation}
           onRecenter={handleRecenter}
           onUseCurrentLocation={handleUseCurrentLocation}
@@ -110,7 +130,7 @@ function MobileLayout({
 
       {/* Map Container */}
       <div className="relative flex-1">
-        <MapView />
+        <GoongMap location={location} onChangeLocation={setLocation} />
 
         {/* Search Bar - Floating */}
         <div className="absolute top-4 left-4 right-4 z-10">
@@ -177,7 +197,7 @@ function DesktopLayout({
 
       {/* Map Area */}
       <main className="flex-1 relative">
-        <MapView />
+        <GoongMap location={location} onChangeLocation={setLocation} />
         <CenterPinIndicator />
         <MapControls
           onRecenter={onRecenter}

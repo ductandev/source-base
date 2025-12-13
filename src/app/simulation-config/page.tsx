@@ -30,13 +30,13 @@ import {
 import type { DisasterType, SimulationConfig } from "./_components/types";
 
 export default function SimulationConfig() {
-  const { selectedLocation } = useLocationStore();
+  const { locationData } = useLocationStore();
   const router = useRouter();
   const setResult = useSimulationResultStore((s) => s.setResult);
   const [isPending, startTransition] = useTransition();
   const [config, setConfig] = useState<SimulationConfig>({
     ...DEFAULT_SIMULATION_CONFIG,
-    location: selectedLocation,
+    location: locationData,
   });
   const { mutateAsync: mutateSimulation } = useSimulation();
   const handleDisasterTypeChange = useCallback((value: string) => {
@@ -55,9 +55,13 @@ export default function SimulationConfig() {
     startTransition(() => {
       (async () => {
         try {
-          const data = await mutateSimulation(config);
-          setResult(data);
-          showSuccessToast("Simulation Successful");
+          console.log(config);
+          if (config.location) {
+            const data = await mutateSimulation(config);
+            setResult(data);
+            showSuccessToast("Simulation Successful");
+          }
+
           //   router.push(ROUTES.SIMULATION_RESULT);
         } catch (err) {
           if (axios.isAxiosError(err)) {

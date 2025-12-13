@@ -135,9 +135,7 @@ function MapSection() {
         <ImageWithFallback
           src={"d2b9b18710eea39cd1a9147b6111319e16a07e3d.png"}
           alt="Impact zones map showing affected areas in Vietnam"
-          fill
-          className="object-cover"
-          priority
+          className="object-cover w-full h-full"
         />
 
         <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-md">

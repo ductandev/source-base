@@ -35,6 +35,7 @@ export const DEFAULT_SIMULATION_CONFIG: SimulationConfig = {
   windSpeed: 0,
   magnitude: 0,
   fireSpreadRate: 0,
+  location: null,
 };
 
 export const PARAMETER_CONSTRAINTS: ParameterConstraints = {

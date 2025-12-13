@@ -3,6 +3,8 @@ export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
 
+  STIMULATION_PICKER: '/simulation-picker',
+
   PUBLIC_USER_GUIDE: 'policy/user-guide',
   PUBLIC_GUEST_PROFILE: '/profile/guest',
   PUBLIC_PLACE_PROFILE: (id: number) => `/profile/place/${id}`,

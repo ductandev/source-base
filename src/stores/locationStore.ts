@@ -32,14 +32,14 @@ const MAX_FAVORITE_LOCATIONS = 10;
 export const useLocationStore = create<LocationState>()(
   persist(
     (set, get) => ({
-      selectedLocation: 'Nha Trang',
+      selectedLocation: 'Tân Bình',
       locationData: {
-        name: 'Nha Trang',
+        name: 'Tân Bình',
         country: 'VN',
         countryCode: 'VN',
-        lat: 12.2388,
-        lon: 109.1967,
-        displayName: 'Nha Trang, Viet Nam',
+        lat: 10.800444,
+        lon: 106.651993,
+        displayName: 'Tân Bình, Viet Nam',
       },
       recentLocations: [],
       favoriteLocations: [],

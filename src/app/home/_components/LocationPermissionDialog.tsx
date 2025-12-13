@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { MapPin, X } from 'lucide-react';
+import { useState } from "react";
+import { MapPin, X } from "lucide-react";
 
 interface LocationPermissionDialogProps {
   onAllow: () => void;

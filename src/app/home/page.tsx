@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Bell,
   MapPin,
@@ -16,18 +16,21 @@ import {
   Thermometer,
   Sun,
   CloudRain,
-} from 'lucide-react';
-import dayjs from 'dayjs';
-import { useWeatherData } from '@/api/openWeather';
-import { useLocationStore } from '@/stores/locationStore';
-import { weatherService } from '@/api/openWeather/api';
-import { useGeolocation } from '@/app/home/_components/useGeolocation';
-import { LocationSearchDropdown } from '@/app/home/_components/LocationSearchDropdown';
-import { LocationPermissionDialog } from '@/app/home/_components/LocationPermissionDialog';
+} from "lucide-react";
+import dayjs from "dayjs";
+import { useWeatherData } from "@/api/openWeather";
+import { useLocationStore } from "@/stores/locationStore";
+import { weatherService } from "@/api/openWeather/api";
+import { useGeolocation } from "@/app/home/_components/useGeolocation";
+import { LocationSearchDropdown } from "@/app/home/_components/LocationSearchDropdown";
+import { LocationPermissionDialog } from "@/app/home/_components/LocationPermissionDialog";
+import { useRouter } from "next/navigation";
+import { ROUTES } from "@/utils/routes";
 
 export default function ResponsiveWeatherApp() {
-  const { selectedLocation, locationData, setSelectedLocation } = useLocationStore();
-  
+  const { selectedLocation, locationData, setSelectedLocation } =
+    useLocationStore();
+
   // Location permission states
   const [showPermissionDialog, setShowPermissionDialog] = useState(true);
   const [allowGeolocation, setAllowGeolocation] = useState(false);
@@ -35,6 +38,8 @@ export default function ResponsiveWeatherApp() {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   const geolocation = useGeolocation(allowGeolocation);
+
+  const router = useRouter();
 
   const {
     currentWeather,
@@ -49,11 +54,11 @@ export default function ResponsiveWeatherApp() {
 
   // Check localStorage for permission preference
   useEffect(() => {
-    const savedPreference = localStorage.getItem('location-permission');
+    const savedPreference = localStorage.getItem("location-permission");
     if (savedPreference !== null) {
       setShowPermissionDialog(false);
       setHasCheckedPermission(true);
-      if (savedPreference === 'allowed') {
+      if (savedPreference === "allowed") {
         setAllowGeolocation(true);
       }
     }
@@ -64,7 +69,10 @@ export default function ResponsiveWeatherApp() {
     if (geolocation.location && !geolocation.loading) {
       // Reverse geocode to get city name
       weatherService
-        .getCurrentWeatherByCoords(geolocation.location.lat, geolocation.location.lon)
+        .getCurrentWeatherByCoords(
+          geolocation.location.lat,
+          geolocation.location.lon,
+        )
         .then((weather) => {
           const locationData = {
             name: weather.location,
@@ -77,21 +85,25 @@ export default function ResponsiveWeatherApp() {
         })
         .catch(() => {
           // If fails, use default
-          setSelectedLocation('Tân Bình');
+          setSelectedLocation("Tân Bình");
         });
     }
   }, [geolocation.location, geolocation.loading, setSelectedLocation]);
 
   const handleAllowLocation = () => {
-    localStorage.setItem('location-permission', 'allowed');
+    localStorage.setItem("location-permission", "allowed");
     setAllowGeolocation(true);
     setHasCheckedPermission(true);
   };
 
   const handleDenyLocation = () => {
-    localStorage.setItem('location-permission', 'denied');
-    setSelectedLocation('Tân Bình');
+    localStorage.setItem("location-permission", "denied");
+    setSelectedLocation("Tân Bình");
     setHasCheckedPermission(true);
+  };
+
+  const handleGoToStimulationPicker = () => {
+    router.push(ROUTES.STIMULATION_PICKER);
   };
 
   // Show permission dialog first
@@ -131,7 +143,7 @@ export default function ResponsiveWeatherApp() {
             Unable to load weather data
           </h2>
           <p className="text-neutral-600">
-            {error?.message || 'An unknown error occurred'}
+            {error?.message || "An unknown error occurred"}
           </p>
         </div>
       </div>
@@ -339,7 +351,7 @@ function MobileLayout({
       {/* Top Bar */}
       <div className="px-5 pt-4 pb-3 animate-slideInLeft">
         <div className="flex items-center justify-between">
-          <div 
+          <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => setShowMobileSearch(true)}
           >
@@ -375,11 +387,23 @@ function MobileLayout({
               onClick={() => setShowMobileSearch(false)}
               className="p-2 hover:bg-neutral-100 rounded-full transition-colors"
             >
-              <svg className="size-6 text-neutral-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                className="size-6 text-neutral-900"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
-            <h2 className="text-lg font-semibold text-neutral-900">Select Location</h2>
+            <h2 className="text-lg font-semibold text-neutral-900">
+              Select Location
+            </h2>
           </div>
           <div className="p-4">
             <LocationSearchDropdown
@@ -402,12 +426,14 @@ function MobileLayout({
             <InfoCard
               icon={<Clock className="size-6 text-[#5EB1EF]" />}
               label="Time"
-              value={dayjs().format('hh:mm A')}
+              value={dayjs().format("hh:mm A")}
             />
           </div>
           <div className="animate-fadeIn delay-200">
             <InfoCard
-              icon={<Droplets className="size-6 text-[#5EB1EF] animate-pulse" />}
+              icon={
+                <Droplets className="size-6 text-[#5EB1EF] animate-pulse" />
+              }
               label="Humidity"
               value={`${weather.humidity}%`}
             />
@@ -468,7 +494,7 @@ function DesktopLayout({
                   What If
                 </a>
                 <a
-                  href="#"
+                  href={ROUTES.STIMULATION_PICKER}
                   className="text-sm text-neutral-600 hover:text-[#2B7FFF] transition-colors"
                 >
                   Simulation
@@ -507,12 +533,14 @@ function DesktopLayout({
                 <InfoCard
                   icon={<Clock className="size-6 text-[#5EB1EF]" />}
                   label="Time"
-                  value={dayjs().format('hh:mm A')}
+                  value={dayjs().format("hh:mm A")}
                 />
               </div>
               <div className="animate-fadeIn delay-200">
                 <InfoCard
-                  icon={<Droplets className="size-6 text-[#5EB1EF] animate-pulse" />}
+                  icon={
+                    <Droplets className="size-6 text-[#5EB1EF] animate-pulse" />
+                  }
                   label="Humidity"
                   value={`${weather.humidity}%`}
                 />
@@ -564,19 +592,19 @@ function WeatherCard({ weather }: any) {
   const getGradient = () => {
     const condition = weather.condition.toLowerCase();
 
-    if (condition.includes('clear')) {
-      return 'from-[#FFB347] to-[#FFCC33]';
-    } else if (condition.includes('rain')) {
-      return 'from-[#4A90E2] to-[#7EC8E3]';
-    } else if (condition.includes('cloud')) {
-      return 'from-[#62a4ee] to-[#afd0f8]';
-    } else if (condition.includes('thunder')) {
-      return 'from-[#5C6BC0] to-[#7986CB]';
-    } else if (condition.includes('snow')) {
-      return 'from-[#E3F2FD] to-[#BBDEFB]';
+    if (condition.includes("clear")) {
+      return "from-[#FFB347] to-[#FFCC33]";
+    } else if (condition.includes("rain")) {
+      return "from-[#4A90E2] to-[#7EC8E3]";
+    } else if (condition.includes("cloud")) {
+      return "from-[#62a4ee] to-[#afd0f8]";
+    } else if (condition.includes("thunder")) {
+      return "from-[#5C6BC0] to-[#7986CB]";
+    } else if (condition.includes("snow")) {
+      return "from-[#E3F2FD] to-[#BBDEFB]";
     }
 
-    return 'from-[#62a4ee] to-[#afd0f8]';
+    return "from-[#62a4ee] to-[#afd0f8]";
   };
 
   // Get animated weather icon
@@ -584,7 +612,7 @@ function WeatherCard({ weather }: any) {
     const condition = weather.condition.toLowerCase();
 
     // Clear/Sunny
-    if (condition.includes('clear')) {
+    if (condition.includes("clear")) {
       return (
         <div className="relative w-32 h-32 lg:w-40 lg:h-40">
           {/* Sun with rotating rays */}
@@ -598,12 +626,12 @@ function WeatherCard({ weather }: any) {
     }
 
     // Rain
-    if (condition.includes('rain')) {
+    if (condition.includes("rain")) {
       return (
         <div className="relative w-32 h-32 lg:w-40 lg:h-40">
           {/* Cloud */}
           <CloudRain className="w-full h-full text-white/90 drop-shadow-lg animate-float" />
-          
+
           {/* Rain drops */}
           <div className="absolute inset-0 overflow-visible">
             {[...Array(8)].map((_, i) => (
@@ -612,9 +640,9 @@ function WeatherCard({ weather }: any) {
                 className="absolute w-1 h-3 bg-blue-200/60 rounded-full animate-rainDrop"
                 style={{
                   left: `${20 + i * 12}%`,
-                  top: '60%',
+                  top: "60%",
                   animationDelay: `${i * 0.2}s`,
-                  animationDuration: '1.5s',
+                  animationDuration: "1.5s",
                 }}
               />
             ))}
@@ -624,12 +652,12 @@ function WeatherCard({ weather }: any) {
     }
 
     // Thunder/Storm
-    if (condition.includes('thunder') || condition.includes('storm')) {
+    if (condition.includes("thunder") || condition.includes("storm")) {
       return (
         <div className="relative w-32 h-32 lg:w-40 lg:h-40">
           {/* Cloud */}
           <Cloud className="w-full h-full text-gray-700/80 drop-shadow-lg animate-float" />
-          
+
           {/* Lightning bolts */}
           <div className="absolute inset-0">
             <Zap
@@ -639,10 +667,10 @@ function WeatherCard({ weather }: any) {
             <Zap
               className="absolute left-1/3 top-2/3 w-6 h-6 text-yellow-400 animate-pulse"
               fill="currentColor"
-              style={{ animationDelay: '0.5s' }}
+              style={{ animationDelay: "0.5s" }}
             />
           </div>
-          
+
           {/* Rain drops */}
           <div className="absolute inset-0 overflow-visible">
             {[...Array(6)].map((_, i) => (
@@ -651,9 +679,9 @@ function WeatherCard({ weather }: any) {
                 className="absolute w-1 h-3 bg-blue-300/60 rounded-full animate-rainDrop"
                 style={{
                   left: `${25 + i * 12}%`,
-                  top: '60%',
+                  top: "60%",
                   animationDelay: `${i * 0.15}s`,
-                  animationDuration: '1.2s',
+                  animationDuration: "1.2s",
                 }}
               />
             ))}
@@ -663,12 +691,12 @@ function WeatherCard({ weather }: any) {
     }
 
     // Snow
-    if (condition.includes('snow')) {
+    if (condition.includes("snow")) {
       return (
         <div className="relative w-32 h-32 lg:w-40 lg:h-40">
           {/* Cloud */}
           <Cloud className="w-full h-full text-white drop-shadow-lg animate-float" />
-          
+
           {/* Snowflakes */}
           <div className="absolute inset-0 overflow-visible">
             {[...Array(10)].map((_, i) => (
@@ -677,7 +705,7 @@ function WeatherCard({ weather }: any) {
                 className="absolute text-white text-xl animate-snowfall"
                 style={{
                   left: `${10 + i * 10}%`,
-                  top: '50%',
+                  top: "50%",
                   animationDelay: `${i * 0.3}s`,
                   animationDuration: `${2 + Math.random()}s`,
                 }}
@@ -694,11 +722,11 @@ function WeatherCard({ weather }: any) {
     return (
       <div className="relative w-32 h-32 lg:w-40 lg:h-40">
         <Cloud className="w-full h-full text-white/90 drop-shadow-lg animate-float" />
-        
+
         {/* Additional small cloud */}
         <Cloud
           className="absolute -right-4 top-8 w-20 h-20 text-white/70 animate-float"
-          style={{ animationDelay: '1s', animationDuration: '4s' }}
+          style={{ animationDelay: "1s", animationDuration: "4s" }}
         />
       </div>
     );
@@ -707,7 +735,7 @@ function WeatherCard({ weather }: any) {
   return (
     <div
       className={`relative bg-gradient-to-b ${getGradient()} rounded-3xl shadow-lg overflow-hidden h-[180px] lg:h-[240px] transition-all duration-500 ${
-        mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+        mounted ? "opacity-100 scale-100" : "opacity-0 scale-95"
       }`}
     >
       {/* Shimmer Effect on Load */}
@@ -792,8 +820,8 @@ function EarlyWarningSection({ alerts }: any) {
             Early Warning
           </h2>
           <p className="text-[13px] text-[#6a7282]">
-            For today, {dayjs().format('HH:mm')}—
-            {dayjs().add(2, 'hour').format('HH:mm')}
+            For today, {dayjs().format("HH:mm")}—
+            {dayjs().add(2, "hour").format("HH:mm")}
           </p>
         </div>
         <button className="flex items-center gap-1 text-[#2b7fff] text-[15px] hover:underline transition-all hover:scale-105">
@@ -814,7 +842,7 @@ function EarlyWarningSection({ alerts }: any) {
               location={alert.location}
               description={alert.description}
               icon={
-                alert.type.toLowerCase().includes('thunder') ? (
+                alert.type.toLowerCase().includes("thunder") ? (
                   <Zap className="size-6 text-white" />
                 ) : (
                   <Wind className="size-6 text-white" />
@@ -861,12 +889,12 @@ function WarningCard({
 function WeeklyForecast({ forecast }: any) {
   const getWeatherEmoji = (condition: string) => {
     const cond = condition.toLowerCase();
-    if (cond.includes('clear')) return '☀️';
-    if (cond.includes('cloud')) return '☁️';
-    if (cond.includes('rain')) return '🌧️';
-    if (cond.includes('thunder')) return '⛈️';
-    if (cond.includes('snow')) return '❄️';
-    return '⛅';
+    if (cond.includes("clear")) return "☀️";
+    if (cond.includes("cloud")) return "☁️";
+    if (cond.includes("rain")) return "🌧️";
+    if (cond.includes("thunder")) return "⛈️";
+    if (cond.includes("snow")) return "❄️";
+    return "⛅";
   };
 
   return (
@@ -882,12 +910,15 @@ function WeeklyForecast({ forecast }: any) {
             style={{ animationDelay: `${index * 0.1}s` }}
           >
             <div className="flex items-center gap-3">
-              <span className="text-2xl animate-float" style={{ animationDelay: `${index * 0.2}s` }}>
+              <span
+                className="text-2xl animate-float"
+                style={{ animationDelay: `${index * 0.2}s` }}
+              >
                 {getWeatherEmoji(day.condition)}
               </span>
               <div>
                 <span className="text-sm text-neutral-900 font-medium">
-                  {index === 0 ? 'Today' : day.day}
+                  {index === 0 ? "Today" : day.day}
                 </span>
                 <p className="text-xs text-neutral-500 capitalize">
                   {day.description}
@@ -913,27 +944,27 @@ function QuickStats({ highlights }: any) {
   const stats = [
     {
       icon: <Sun className="size-5 text-orange-600 animate-sunRays" />,
-      label: 'UV Index',
+      label: "UV Index",
       value: `${highlights.uvIndex} (${highlights.uvLevel})`,
-      gradient: 'from-orange-50 to-orange-100',
+      gradient: "from-orange-50 to-orange-100",
     },
     {
       icon: <Eye className="size-5 text-blue-600" />,
-      label: 'Visibility',
+      label: "Visibility",
       value: `${highlights.visibility} km`,
-      gradient: 'from-blue-50 to-blue-100',
+      gradient: "from-blue-50 to-blue-100",
     },
     {
       icon: <Gauge className="size-5 text-purple-600" />,
-      label: 'Pressure',
+      label: "Pressure",
       value: `${highlights.pressure} mb`,
-      gradient: 'from-purple-50 to-purple-100',
+      gradient: "from-purple-50 to-purple-100",
     },
     {
       icon: <Thermometer className="size-5 text-pink-600 animate-pulse" />,
-      label: 'Feels Like',
+      label: "Feels Like",
       value: `${highlights.feelsLike}°C`,
-      gradient: 'from-pink-50 to-pink-100',
+      gradient: "from-pink-50 to-pink-100",
     },
   ];
 
@@ -1072,7 +1103,7 @@ function TabButton({
         </div>
       )}
       <span
-        className={`text-[11px] ${active ? 'text-[#101828]' : 'text-[#4a5565]'}`}
+        className={`text-[11px] ${active ? "text-[#101828]" : "text-[#4a5565]"}`}
       >
         {label}
       </span>

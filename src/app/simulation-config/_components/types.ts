@@ -1,3 +1,13 @@
+export interface LocationData {
+  name: string;
+  country: string;
+  countryCode?: string;
+  state?: string;
+  lat: number;
+  lon: number;
+  displayName: string;
+  localNames?: Record<string, string>;
+}
 export type DisasterType = "flood" | "earthquake" | "hurricane" | "wildfire";
 
 export interface DisasterTypeOption {
@@ -14,7 +24,7 @@ export interface SimulationConfig {
   windSpeed?: number;
   magnitude?: number;
   fireSpreadRate?: number;
-  location: string;
+  location: LocationData | null;
 }
 
 export interface SimulationResult {

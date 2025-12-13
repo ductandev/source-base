@@ -488,7 +488,7 @@ function DesktopLayout({
                   Home
                 </a>
                 <a
-                  href="#"
+                  href="./whatif"
                   className="text-sm text-neutral-600 hover:text-[#2B7FFF] transition-colors"
                 >
                   What If

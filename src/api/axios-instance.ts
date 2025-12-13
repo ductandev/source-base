@@ -1,24 +1,17 @@
-import axios, { AxiosError } from 'axios';
-const BASE_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080/api';
+import axios from 'axios';
+import qs from "qs";
 
-export enum EAxiosErrorCode {
-  ErrorNetwork = 'ERR_NETWORK',
-  ErrorTimeout = 'ECONNABORTED', // Axios uses this code for request timeouts,
-  ErrorCanceled = 'ERR_CANCELED'
-}
-
-export interface CustomAxiosError extends AxiosError {
-  _isHandled?: boolean;
-}
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080/api';
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true, // To send HTTP-ONLY cookies
+  withCredentials: false, // To send HTTP-ONLY cookies
   headers: {
-    'Content-Type': 'application/json'
-  }
+    "Content-Type": "application/json",
+  },
+  paramsSerializer: {
+    serialize: (params) => qs.stringify(params, { arrayFormat: "repeat" }),
+  },
 });
-
 
 export default axiosInstance;

@@ -3,9 +3,16 @@
 import { useQuery } from "@tanstack/react-query";
 
 export default function TestPage() {
+  const OPEN_WEATHER_API_KEY = process.env.NEXT_PUBLIC_OPEN_WEATHER_API_KEY;
+
   const { data, isLoading } = useQuery({
     queryKey: ["hello"],
-    queryFn: async () => (await fetch("https://api.github.com")).json(),
+    queryFn: async () =>
+      (
+        await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=Nha+Trang&appid=${OPEN_WEATHER_API_KEY}&units=metric&lang=vi`,
+        )
+      ).json(),
   });
 
   if (isLoading) return <p>Loading...</p>;

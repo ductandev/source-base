@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
-// import { useSimulationStore } from "@/stores/SimulationStore";
+import { useSimulationStore } from "@/stores/SimulationStore";
 import { useState, useMemo } from "react";
 import {
   IMPACT_LEVELS,
@@ -29,8 +29,8 @@ type TopActionFromApi = {
   priority?: string;
 };
 export default function SimulationResults() {
-  // const simulationResponse = useSimulationStore((s) => s.currentSimulation);
-  const [simulationResponse, setSimulationResponse] = useState({
+  const simulationResponse = useSimulationStore((s) => s.currentSimulation);
+  /*const [simulationResponse, setSimulationResponse] = useState({
     data: {
       simulationId: "a66839a3-9e01-48bc-99f1-6a558666cccf",
       input: {
@@ -132,12 +132,12 @@ export default function SimulationResults() {
       },
       generatedAt: "2025-12-13T13:30:09.085Z",
     },
-  });
-
+  });*/
+  console.log(simulationResponse);
   const router = useRouter();
 
   const stats: StatCardProps[] = useMemo(() => {
-    const kpis = simulationResponse?.data?.kpis;
+    const kpis = simulationResponse?.kpis;
     return [
       {
         label: "Households Affected",
@@ -152,14 +152,14 @@ export default function SimulationResults() {
         value: (kpis?.sheltersNeeded ?? 0).toLocaleString(),
       },
     ];
-  }, [simulationResponse?.data?.kpis]);
+  }, [simulationResponse?.kpis]);
 
   const handleGoBack = () => {
     router.push(ROUTES.SIMULATION_CONFIG);
   };
 
   const responseAction: Omit<ResponseActionProps, "icon">[] = useMemo(() => {
-    const actions = simulationResponse?.data?.topActions ?? [];
+    const actions = simulationResponse?.topActions ?? [];
 
     const priorityToColor = (p?: string) => {
       switch ((p ?? "").toUpperCase()) {
@@ -180,7 +180,7 @@ export default function SimulationResults() {
       description: a.description,
       color: priorityToColor(a.priority),
     }));
-  }, [simulationResponse?.data?.topActions]);
+  }, [simulationResponse?.topActions]);
 
   if (!simulationResponse) return <div>No simulation data</div>;
   console.log(simulationResponse);

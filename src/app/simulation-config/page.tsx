@@ -64,8 +64,10 @@ export default function SimulationConfig() {
         try {
           if (config.location) {
             const data = await mutateSimulation(config);
-            setCurrentSimulation(data);
-            showSuccessToast("Simulation Successful");
+            if (data.status == 200) {
+              setCurrentSimulation(data.data);
+              showSuccessToast("Simulation Successful");
+            }
           }
 
           router.push(ROUTES.SIMULATION_RESULT);

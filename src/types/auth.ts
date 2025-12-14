@@ -40,7 +40,7 @@ export interface ISimulationRequest {
   fireSpreadRate?: number;
   location: LocationData | null;
 }
-export interface ISimulatioResponse {
+export interface SimulationResult {
   simulationId: string;
   input: SimulationInput;
   map: SimulationMap;
@@ -48,4 +48,10 @@ export interface ISimulatioResponse {
   topActions: SimulationTopAction[];
   responsePlan: SimulationResponsePlan;
   generatedAt: string; // ISO
+}
+
+export interface ISimulatioResponse {
+  status: number;
+  statusText: string;
+  data: SimulationResult;
 }

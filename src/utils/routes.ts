@@ -6,6 +6,8 @@ export const ROUTES = {
   STIMULATION_PICKER: "/simulation-picker",
   SIMULATION_RESULT: "/simulation-result",
   SIMULATION_CONFIG: "/simulation-config",
+  WHAT_IF: "/whatif",
+  SCENARIO_RESULT: "/scenario-result",
 
   PUBLIC_USER_GUIDE: "policy/user-guide",
   PUBLIC_GUEST_PROFILE: "/profile/guest",

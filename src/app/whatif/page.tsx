@@ -14,6 +14,7 @@ import {
 } from './constants';
 import { ResourceItem, Scenario, TabValue } from '@/types/whatif';
 import { useRouter} from 'next/navigation';
+import { ROUTES } from '@/utils/routes';
 
 
 export default function WhatIfScenario() {
@@ -57,7 +58,7 @@ export default function WhatIfScenario() {
       infrastructure,
       population,
     });
-    useRoute.push('/scenario-result')
+    useRoute.push(ROUTES.SCENARIO_RESULT)
   }, [scenario, resources, infrastructure, population]);
 
   return (
@@ -108,17 +109,20 @@ export default function WhatIfScenario() {
                 />
               </div>
             </div>
-
             {/* Bottom CTA - Desktop */}
-            <div className="mt-8 max-w-2xl mx-auto">
-              <Button
-                onClick={handleRunSimulation}
-                className="w-full h-12 bg-[#46a758] hover:bg-[#3d9049] text-white text-base"
-                size="lg"
-              >
-                Run Simulation
-              </Button>
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 pt-8">
+              <div className='xl:col-span-1 space-y-6'></div> 
+              <div className="xl:col-span-2 space-y-6">
+                <Button
+                  onClick={handleRunSimulation}
+                  className="w-full h-12 bg-[#46a758] hover:bg-[#3d9049] text-white text-base"
+                  size="lg"
+                >
+                  Run Simulation
+                </Button>
+              </div>
             </div>
+
           </div>
         </main>
       </div>

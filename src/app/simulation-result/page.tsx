@@ -121,10 +121,15 @@ export default function SimulationResults() {
   );
 }
 
-function MobileLayout({ stats, responseAction, onGoBack }: LayoutProps) {
+function MobileLayout({
+  stats,
+  responseAction,
+  handleShare,
+  onGoBack,
+}: LayoutProps) {
   return (
     <div className="flex flex-col min-h-screen">
-      <Header onGoBack={onGoBack} />
+      <Header onGoBack={onGoBack} handleShare={handleShare} />
       <main className="flex-1 px-4 py-5 space-y-4 pb-24">
         <MapSection />
         <StatsGrid stats={stats} />

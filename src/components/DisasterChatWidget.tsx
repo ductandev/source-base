@@ -3,6 +3,7 @@
 
 import React, { useRef, useState } from "react";
 import { ChatRequestDto, ChatResponseDto, chatService } from "@/api/chat/api";
+import Image from "next/image";
 
 type Role = "user" | "assistant";
 
@@ -102,23 +103,37 @@ export default function DisasterChatWidget() {
     <>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg bg-emerald-500 text-white flex items-center justify-center"
+        className="fixed bottom-32 right-5 z-50 h-13 w-13 rounded-full bg-gradient-to-br from-[#51a2ff] to-[#a9dbb2] text-white flex items-center justify-center animate-fadeIn hover:bg-emerald-600 transition"
         aria-label="Open chatbot"
       >
-        🤖
+        <Image
+          src="/assets/bot.png"
+          alt=""
+          width={18}
+          height={18}
+          className="object-contain"
+          priority
+        />
       </button>
 
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-[360px] max-w-[92vw] rounded-2xl shadow-2xl overflow-hidden border bg-white">
+        <div className="fixed bottom-28 right-5 z-50 rounded-2xl shadow-2xl overflow-hidden border bg-white">
           <div className="relative px-4 py-3 flex items-center justify-between overflow-hidden border-b border-white/40 shadow-sm">
             {/* gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#06CFF1] to-[#DEFA8E]" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#51a2ff] to-[#a9dbb2]" />
 
             {/* content */}
             <div className="relative flex items-center gap-3">
               {/* bot icon (small circle) */}
               <div className="h-10 w-10 rounded-full bg-white/70 flex items-center justify-center shadow-sm">
-                🤖
+                <Image
+                  src="/assets/bot.png"
+                  alt=""
+                  width={18}
+                  height={18}
+                  className="object-contain"
+                  priority
+                />
               </div>
 
               <div className="leading-tight">
@@ -154,7 +169,7 @@ export default function DisasterChatWidget() {
 
           <div
             ref={listRef}
-            className="h-[330px] overflow-y-auto p-4 space-y-3 bg-gray-50"
+            className="h-[360px] overflow-y-auto p-4 space-y-3 bg-gray-50"
           >
             {messages.map((m) => (
               <div
@@ -215,7 +230,7 @@ export default function DisasterChatWidget() {
             <button
               type="submit"
               disabled={sending || !input.trim()}
-              className="h-10 w-10 rounded-full bg-emerald-500 text-white disabled:opacity-50"
+              className="h-10 w-10 rounded-full bg-gradient-to-br from-[#51a2ff] to-[#a9dbb2] text-white disabled:opacity-50"
               aria-label="Send"
             >
               ➤

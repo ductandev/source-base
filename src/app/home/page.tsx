@@ -28,6 +28,7 @@ import { LocationSearchDropdown } from "@/app/home/_components/LocationSearchDro
 import { LocationPermissionDialog } from "@/app/home/_components/LocationPermissionDialog";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/utils/routes";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -539,7 +540,7 @@ function DesktopLayout({
                   Home
                 </a>
                 <a
-                  href="./whatif"
+                  href={ROUTES.WHAT_IF}
                   className="text-sm text-neutral-600 hover:text-[#2B7FFF] transition-colors"
                 >
                   What If
@@ -1072,6 +1073,9 @@ function BottomTabBar() {
     router.push(ROUTES.STIMULATION_PICKER);
   };
 
+  const handleGoToWhatif = () => {
+    router.push(ROUTES.WHAT_IF);
+  };
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-neutral-200 px-6 pt-3 pb-6 rounded-t-[32px] shadow-[0px_-4px_20px_0px_rgba(0,0,0,0.08)] animate-slideInLeft">
       <div className="flex items-center justify-between max-w-md mx-auto">
@@ -1081,6 +1085,7 @@ function BottomTabBar() {
           label="Simulation"
         />
         <TabButton
+          onclickGoto={handleGoToWhatif}
           icon={
             <svg
               className="size-6"

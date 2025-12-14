@@ -2,9 +2,10 @@
 
 import {
   Clock,
-  ChevronLeft,
   Share2,
   CheckCircle2,
+  ArrowLeft,
+  Check,
 } from "lucide-react";
 import {
   BarChart,
@@ -29,7 +30,8 @@ export default function App() {
     { category: "Shelters", available: 3000, required: 3500 },
     { category: "Food", available: 5000, required: 6000 },
   ];
-  const useRoute = useRouter()
+
+  const router = useRouter();
   const [isChartLoading, setIsChartLoading] = useState(true);
 
   const [checklistItems, setChecklistItems] = useState([
@@ -58,31 +60,22 @@ export default function App() {
 
   /* ===== CHART LOADING ===== */
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsChartLoading(false);
-    }, 1200);
-
+    const timer = setTimeout(() => setIsChartLoading(false), 1200);
     return () => clearTimeout(timer);
   }, []);
 
   const toggleCheckbox = (id: number) => {
     setChecklistItems((items) =>
       items.map((item) =>
-        item.id === id
-          ? { ...item, completed: !item.completed }
-          : item
+        item.id === id ? { ...item, completed: !item.completed } : item
       )
     );
   };
 
   const handleShare = () => {
     const CheckIcon = () => (
-      <div className="shrink-0 size-4">
-        <svg
-          className="block size-full"
-          fill="none"
-          viewBox="0 0 16 16"
-        >
+      <div className="shrink-0 w-4 h-4">
+        <svg className="block w-full h-full" fill="none" viewBox="0 0 16 16">
           <path d={svgPaths.pf3da6f0} fill="#52C41A" />
         </svg>
       </div>
@@ -104,10 +97,7 @@ export default function App() {
     });
   };
 
-  const completedCount = checklistItems.filter(
-    (item) => item.completed
-  ).length;
-
+  const completedCount = checklistItems.filter((item) => item.completed).length;
   const progressPercentage = Math.round(
     (completedCount / checklistItems.length) * 100
   );
@@ -116,39 +106,46 @@ export default function App() {
     <div className="min-h-screen bg-[#fafafa]">
       <Toaster />
 
-      {/* Header */}
-      <header className="bg-white border-b px-4 py-3 flex justify-between items-center sticky top-0 z-10">
-        <button className="w-9 h-9 rounded-lg border flex items-center justify-center" onClick={()=>useRoute.back()}>
-          <ChevronLeft className="w-5 h-5" />
-        </button>
+      {/* Headers */}
+      <MobileHeader onShare={handleShare} router={router} />
+      <DesktopHeader onShare={handleShare} router={router} />
 
-        <h1 className="text-lg">Scenario Results</h1>
-
-        <button
-          onClick={handleShare}
-          className="w-9 h-9 rounded-lg border flex items-center justify-center"
-        >
-          <Share2 className="w-4 h-4" />
-        </button>
-      </header>
-
-      {/* Main */}
-      <main className="px-4 pt-4 pb-6 max-w-6xl mx-auto grid lg:grid-cols-2 gap-4">
+      {/* Main content padding top = header height */}
+      <main className="pt-8 px-4 pb-6 max-w-6xl mx-auto grid lg:grid-cols-2 gap-4">
         {/* Left */}
         <div className="space-y-4">
-          {/* Status */}
-          <div className="bg-white rounded-lg shadow-sm p-4 text-center">
-            <CheckCircle2 className="w-5 h-5 mx-auto text-green-500 fill-green-500" />
-            <p className="text-sm text-neutral-500 mt-1">
-              Completed 2 minutes ago
-            </p>
-          </div>
+          {/* Success Note */}
+          <div className="bg-white rounded-lg shadow-sm p-4 text-center space-y-2">
+            {/* Success row */}
+            <div className="flex justify-center items-center space-x-2">
+              <div className="w-5 h-5 flex items-center justify-center rounded-full bg-green-500">
+                <Check className="w-3 h-3 text-white" />
+              </div>
+              <span className="font-semibold text-green-700">Success</span>
+            </div>
 
+            {/* Time */}
+            <p className="text-sm text-neutral-500">Completed 2 minutes ago</p>
+
+            {/* 3 info boxes */}
+            <div className="flex justify-around mt-2 text-sm">
+              <div className="text-center">
+                <div className="font-semibold">14 days</div>
+                <div className="text-gray-500">Duration</div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold">98%</div>
+                <div className="text-gray-500">Efficiency</div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold">$1,500</div>
+                <div className="text-gray-500">Costs</div>
+              </div>
+            </div>
+          </div>
           {/* Chart */}
           <div className="bg-white rounded-lg shadow-sm">
-            <h2 className="text-center py-3 font-semibold">
-              Resource Gap Analysis
-            </h2>
+            <h2 className="text-center py-3 font-semibold">Resource Gap Analysis</h2>
 
             <div className="h-[260px]">
               {isChartLoading ? (
@@ -171,14 +168,12 @@ export default function App() {
 
         {/* Right */}
         <div className="bg-white rounded-lg shadow-sm p-4">
-          <h2 className="text-center font-semibold mb-4">
-            Recommended Checklist
-          </h2>
+          <h2 className="text-center font-semibold mb-4">Recommended Checklist</h2>
 
           <div className="mb-4">
             <div className="flex justify-between text-sm mb-1">
               <span>Overall Progress</span>
-              <span>{progressPercentage}%</span>
+              <span>{progressPercentage}% complete</span>
             </div>
             <div className="h-2 bg-gray-200 rounded">
               <div
@@ -190,11 +185,7 @@ export default function App() {
 
           <div className="space-y-2">
             {checklistItems.map((item) => (
-              <ChecklistItem
-                key={item.id}
-                item={item}
-                onToggle={toggleCheckbox}
-              />
+              <ChecklistItem key={item.id} item={item} onToggle={toggleCheckbox} />
             ))}
           </div>
         </div>
@@ -203,7 +194,7 @@ export default function App() {
   );
 }
 
-/* ================= SUB ================= */
+/* ================= SUB COMPONENTS ================= */
 
 function ChecklistItem({
   item,
@@ -218,17 +209,26 @@ function ChecklistItem({
   };
   onToggle: (id: number) => void;
 }) {
+  const priorityColor = {
+    high: "bg-red-100 text-red-800",
+    medium: "bg-yellow-100 text-yellow-800",
+    low: "bg-blue-100 text-blue-800",
+  }[item.priority];
+
   return (
-    <div className="border rounded-lg p-3 flex gap-3">
-      <button onClick={() => onToggle(item.id)}>
+    <div className="border rounded-lg p-3 flex gap-3 items-center">
+      <button onClick={() => onToggle(item.id)} className="flex-none">
         {item.completed ? "✅" : "⬜"}
       </button>
 
       <div className="flex-1">
         <p className="text-sm">{item.title}</p>
-        <div className="text-xs text-gray-500 flex gap-1 items-center">
+        <div className="text-xs text-gray-500 flex gap-2 items-center mt-1">
           <Clock className="w-3 h-3" />
-          {item.eta}
+          <span>{item.eta}</span>
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${priorityColor}`}>
+            {item.priority} priority
+          </span>
         </div>
       </div>
     </div>
@@ -237,23 +237,21 @@ function ChecklistItem({
 
 /* ================= TOOLTIP ================= */
 
-function CustomTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: { name: string; value: number }[];
-  label?: string;
-}) {
+function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
 
   return (
     <div className="bg-gray-800 text-white rounded px-3 py-2 text-xs">
-      <p className="mb-1">{label}</p>
-      {payload.map((p, i) => (
-        <div key={i}>
-          {p.name}: {p.value}
+      <p className="mb-1 font-semibold">{label}</p>
+      {payload.map((p: any, i: any) => (
+        <div key={i} className="flex items-center gap-2">
+          <div
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: p.fill }}
+          />
+          <span>
+            {p.name}: {p.value}
+          </span>
         </div>
       ))}
     </div>
@@ -272,5 +270,57 @@ function ChartSkeleton() {
         </div>
       ))}
     </div>
+  );
+}
+
+/* ================= HEADERS ================= */
+
+function MobileHeader({ onShare, router }: any) {
+  return (
+    <header className="sticky top-0 z-20 lg:hidden bg-white border-b px-4 py-3 flex items-center shadow-sm">
+      <button
+        onClick={() => router.back()}
+        className="flex-none w-9 h-9 flex items-center justify-center rounded-lg hover:bg-neutral-100"
+      >
+        <ArrowLeft className="w-5 h-5" />
+      </button>
+
+      <h1 className="text-lg font-semibold text-center flex-1">
+        Scenario Results
+      </h1>
+
+      <button
+        onClick={onShare}
+        className="flex-none w-9 h-9 flex items-center justify-center rounded-lg border hover:bg-neutral-100"
+      >
+        <Share2 className="w-4 h-4" />
+      </button>
+    </header>
+  );
+}
+
+function DesktopHeader({ onShare, router }: any) {
+  return (
+    <header className="sticky top-0 hidden lg:flex z-20 bg-white border-b shadow-sm">
+      <div className="max-w-6xl mx-auto px-4 py-6 w-full flex items-center justify-between">
+        <button
+          onClick={() => router.back()}
+          className="flex-none w-9 h-9 flex items-center justify-center rounded-lg hover:bg-neutral-100"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+
+        <h1 className="text-2xl font-semibold text-neutral-950 text-center flex-1">
+          Scenario Results
+        </h1>
+
+        <button
+          onClick={onShare}
+          className="flex-none w-9 h-9 flex items-center justify-center rounded-lg border hover:bg-neutral-100"
+        >
+          <Share2 className="w-4 h-4" />
+        </button>
+      </div>
+    </header>
   );
 }

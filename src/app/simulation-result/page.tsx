@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
 import { useSimulationStore } from "@/stores/SimulationStore";
 import { useState, useMemo } from "react";
+import { showErrorToast, showSuccessToast } from "@/common/toastify";
 import {
   IMPACT_LEVELS,
   // DEFAULT_STATS,
@@ -21,6 +22,7 @@ type LayoutProps = {
   stats: StatCardProps[];
   responseAction: Omit<ResponseActionProps, "icon">[];
   onGoBack?: () => void;
+  handleShare?: () => void;
 };
 type TopActionFromApi = {
   rank: number;
@@ -135,7 +137,28 @@ export default function SimulationResults() {
   });*/
   console.log(simulationResponse);
   const router = useRouter();
+  const simulationId = simulationResponse?.simulationId;
+  const handleShare = async () => {
+    if (!simulationId) return;
 
+    const url = `${window.location.origin}/simulation-result/${simulationId}`;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      showSuccessToast("Copied Successfully!");
+    } catch (e) {
+      const el = document.createElement("textarea");
+      el.value = url;
+      el.setAttribute("readonly", "");
+      el.style.position = "fixed";
+      el.style.left = "-9999px";
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+      showErrorToast("Copied Failed!");
+    }
+  };
   const stats: StatCardProps[] = useMemo(() => {
     const kpis = simulationResponse?.kpis;
     return [
@@ -192,6 +215,7 @@ export default function SimulationResults() {
           onGoBack={handleGoBack}
           stats={stats}
           responseAction={responseAction}
+          handleShare={handleShare}
         />
       </div>
 
@@ -201,6 +225,7 @@ export default function SimulationResults() {
           onGoBack={handleGoBack}
           stats={stats}
           responseAction={responseAction}
+          handleShare={handleShare}
         />
       </div>
     </div>
@@ -221,7 +246,12 @@ function MobileLayout({ stats, responseAction, onGoBack }: LayoutProps) {
   );
 }
 
-function DesktopLayout({ stats, responseAction, onGoBack }: LayoutProps) {
+function DesktopLayout({
+  stats,
+  responseAction,
+  onGoBack,
+  handleShare,
+}: LayoutProps) {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-50 bg-white border-b border-neutral-200 shadow-sm">
@@ -242,13 +272,11 @@ function DesktopLayout({ stats, responseAction, onGoBack }: LayoutProps) {
               </h1>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm">
-                Export Report
-              </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 className="hover:bg-neutral-100"
+                onClick={handleShare}
               >
                 <Share2 className="size-5" />
                 <span className="sr-only">Share</span>
@@ -275,9 +303,10 @@ function DesktopLayout({ stats, responseAction, onGoBack }: LayoutProps) {
 
 interface HeaderProps {
   onGoBack?: () => void;
+  handleShare?: () => void;
 }
 
-function Header({ onGoBack }: HeaderProps) {
+function Header({ onGoBack, handleShare }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-neutral-200">
       <div className="flex items-center justify-between px-4 py-3">
@@ -297,6 +326,7 @@ function Header({ onGoBack }: HeaderProps) {
           variant="ghost"
           size="icon"
           className="size-9 hover:bg-neutral-100"
+          onClick={handleShare}
         >
           <Share2 className="size-5" />
           <span className="sr-only">Share</span>

@@ -40,6 +40,9 @@ export interface ISimulationRequest {
   fireSpreadRate?: number;
   location: LocationData | null;
 }
+export interface ISimulationDetailRequest {
+  scenarioId: string | boolean | number;
+}
 export interface SimulationResult {
   simulationId: string;
   input: SimulationInput;

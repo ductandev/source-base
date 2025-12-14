@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Search, MapPin, Crosshair, Locate, X, Loader2 } from "lucide-react";
+import {
+  Search,
+  MapPin,
+  Crosshair,
+  Locate,
+  X,
+  Loader2,
+  ArrowLeft,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +20,9 @@ import { useGoongAutocomplete } from "@/api/simulation/useGoong";
 import { goongService, GoongPrediction } from "@/api/simulation/goong-service";
 import { useDebounce } from "@/app/simulation-picker/hooks/useDebounce";
 import { useLocationStore as useWeatherLocationStore } from "@/stores/locationStore";
+import BackButton from "@/common/back-button";
+import { ROUTES } from "@/utils/routes";
+import BackMobileButton from "@/common/back-button-custom";
 
 // Convert Weather LocationData to Simulation LocationData
 function convertWeatherToSimulationLocation(
@@ -62,12 +73,6 @@ export default function LocationPicker() {
   const reverseGeocodeTimeout = useRef<NodeJS.Timeout | null>(null);
   const lastReverseGeocodeTime = useRef<number>(0);
   const MIN_REVERSE_GEOCODE_INTERVAL = 2000;
-
-  // Log để debug
-  useEffect(() => {
-    console.log("🎯 Weather Location Data:", weatherLocationData);
-    console.log("📍 Initial Location:", initialLocation);
-  }, []);
 
   // ⚠️ DEBOUNCED reverse geocode
   const handleLocationChange = useCallback(
@@ -279,6 +284,7 @@ function MobileLayout({
           onRecenter={onRecenter}
           onUseCurrentLocation={onUseCurrentLocation}
           geoLoading={geoLoading}
+          display={true}
         />
       </div>
 
@@ -307,6 +313,11 @@ function DesktopLayout({
     <div className="h-screen flex">
       {/* Sidebar */}
       <aside className="w-[400px] xl:w-[480px] bg-white border-r border-neutral-200 flex flex-col shadow-lg z-10">
+        {/* ✅ Back Button */}
+        <div className="px-6 pb-0 pt-4">
+          <BackButton label={"Back"} className="!text-xl" href={ROUTES.HOME} />
+        </div>
+
         {/* Header */}
         <div className="p-6 border-b border-neutral-200">
           <h1 className="text-2xl font-semibold text-neutral-950 mb-4">
@@ -356,6 +367,7 @@ function DesktopLayout({
           onUseCurrentLocation={onUseCurrentLocation}
           geoLoading={geoLoading}
           position="right"
+          display={false}
         />
         <CoordinatesDisplay coordinates={location.coordinates} />
       </main>
@@ -462,6 +474,7 @@ interface MapControlsProps {
   onUseCurrentLocation: () => void;
   geoLoading: boolean;
   position?: "left" | "right";
+  display?: boolean;
 }
 
 function MapControls({
@@ -469,6 +482,7 @@ function MapControls({
   onUseCurrentLocation,
   geoLoading,
   position = "left",
+  display,
 }: MapControlsProps) {
   const positionClass = position === "right" ? "right-4" : "left-4";
 
@@ -476,10 +490,15 @@ function MapControls({
     <div
       className={`absolute ${positionClass} top-20 lg:top-4 z-10 flex flex-col gap-2`}
     >
+      <BackMobileButton
+        className="hover:text-rose-500"
+        display={display}
+        href={ROUTES.HOME}
+      />
       <Button
         variant="secondary"
         size="icon"
-        className="size-10 bg-white hover:bg-neutral-100 shadow-md"
+        className="size-10 bg-white hover:bg-neutral-100 shadow-md hover:size-11 hover:text-rose-500"
         onClick={onRecenter}
         aria-label="Recenter map"
       >
@@ -488,7 +507,7 @@ function MapControls({
       <Button
         variant="secondary"
         size="icon"
-        className="size-10 bg-white hover:bg-neutral-100 shadow-md"
+        className="size-10 bg-white hover:bg-neutral-100 shadow-md hover:size-11 hover:text-rose-500"
         onClick={onUseCurrentLocation}
         aria-label="Current location"
         disabled={geoLoading}

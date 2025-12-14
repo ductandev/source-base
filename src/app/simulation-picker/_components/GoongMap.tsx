@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { LocationData } from "@/types/simulation";
+import "./goong-map.css";
 
 interface GoongMapProps {
   location: LocationData;
@@ -15,15 +16,39 @@ export default function GoongMap({
   const mapRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const markerRef = useRef<any>(null);
+  const [isMapReady, setIsMapReady] = useState(false);
 
-  // ⚠️ CRITICAL: Track để tránh infinite loop
+  // Track để tránh infinite loop
   const isUserInteracting = useRef(false);
   const isProgrammaticMove = useRef(false);
   const locationRef = useRef(location);
 
-  // 1️⃣ Init map - CHỈ INIT 1 LẦN
+  // 1️⃣ Load CSS TRƯỚC - CHỈ 1 LẦN
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href =
+      "https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.css";
+
+    if (!document.querySelector(`link[href="${link.href}"]`)) {
+      document.head.appendChild(link);
+    }
+
+    // Đợi CSS load xong
+    link.onload = () => {
+      console.log("✅ Goong CSS loaded");
+      setIsMapReady(true);
+    };
+
+    // Fallback nếu CSS đã có sẵn
+    setTimeout(() => setIsMapReady(true), 100);
+  }, []);
+
+  // 2️⃣ Init map SAU KHI CSS đã load
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current || !isMapReady) return;
+
+    console.log("🗺️ Initializing Goong Map...");
 
     import("@goongmaps/goong-js").then((goongjs) => {
       const goong = goongjs.default;
@@ -34,6 +59,14 @@ export default function GoongMap({
         style: "https://tiles.goong.io/assets/goong_map_web.json",
         center: [location.coordinates.lng, location.coordinates.lat],
         zoom: 14,
+      });
+
+      // ⚠️ CRITICAL: Resize map sau khi load xong
+      map.on("load", () => {
+        console.log("✅ Map loaded - resizing...");
+        setTimeout(() => {
+          map.resize();
+        }, 100);
       });
 
       const marker = new goong.Marker({ color: "#ef4444" })
@@ -55,9 +88,9 @@ export default function GoongMap({
         }
       });
 
-      // 2️⃣ CHỈ GỌI onChangeLocation KHI USER KÉO MAP
+      // CHỈ GỌI onChangeLocation KHI USER KÉO MAP
       map.on("moveend", () => {
-        // Bỏ qua nếu là programmatic move (từ search/current location)
+        // Bỏ qua nếu là programmatic move
         if (isProgrammaticMove.current) {
           isProgrammaticMove.current = false;
           isUserInteracting.current = false;
@@ -81,18 +114,8 @@ export default function GoongMap({
         locationRef.current = newLocation;
         onChangeLocation(newLocation);
 
-        // Reset flag
         isUserInteracting.current = false;
       });
-
-      // Load CSS
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href =
-        "https://cdn.jsdelivr.net/npm/@goongmaps/goong-js@1.0.9/dist/goong-js.css";
-      if (!document.querySelector(`link[href="${link.href}"]`)) {
-        document.head.appendChild(link);
-      }
     });
 
     return () => {
@@ -100,13 +123,12 @@ export default function GoongMap({
         mapRef.current.remove();
       }
     };
-  }, []); // ⚠️ EMPTY DEPENDENCY - Chỉ init 1 lần
+  }, [isMapReady]); // Chỉ init khi CSS ready
 
   // 3️⃣ Update map khi location thay đổi từ SEARCH/CURRENT LOCATION
   useEffect(() => {
     if (!mapRef.current || !markerRef.current) return;
 
-    // So sánh để tránh update không cần thiết
     const latDiff = Math.abs(
       locationRef.current.coordinates.lat - location.coordinates.lat,
     );
@@ -117,7 +139,7 @@ export default function GoongMap({
     // Chỉ update nếu thay đổi > 0.0001 độ (~11m)
     if (latDiff > 0.0001 || lngDiff > 0.0001) {
       locationRef.current = location;
-      isProgrammaticMove.current = true; // ⚠️ Đánh dấu là programmatic
+      isProgrammaticMove.current = true;
 
       mapRef.current.flyTo({
         center: [location.coordinates.lng, location.coordinates.lat],
@@ -132,5 +154,28 @@ export default function GoongMap({
     }
   }, [location.coordinates.lat, location.coordinates.lng]);
 
-  return <div ref={containerRef} className="absolute inset-0" />;
+  // 4️⃣ Handle window resize
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const handleResize = () => {
+      console.log("📐 Window resized - resizing map...");
+      mapRef.current.resize();
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className="absolute inset-0"
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: "400px",
+      }}
+    />
+  );
 }

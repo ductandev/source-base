@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { ROUTES } from "@/utils/routes";
 import GoongClusteredMap from "@/app/simulation-result/_components/GoongPointClusterMap";
 import GoongHeatmap from "@/app/simulation-result/_components/GoongHeatmap";
+import copy from "copy-to-clipboard";
 
 type LayoutProps = {
   stats: StatCardProps[];
@@ -36,20 +37,15 @@ export default function SimulationResults() {
 
     const url = `${window.location.origin}/simulation-result/${simulationId}`;
 
-    try {
-      await navigator.clipboard.writeText(url);
+    const success = copy(url, {
+      debug: false,
+      message: "Press #{key} to copy",
+    });
+
+    if (success) {
       showSuccessToast("Copied Successfully!");
-    } catch (e) {
-      const el = document.createElement("textarea");
-      el.value = url;
-      el.setAttribute("readonly", "");
-      el.style.position = "fixed";
-      el.style.left = "-9999px";
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand("copy");
-      document.body.removeChild(el);
-      showErrorToast("Copied Failed!");
+    } else {
+      showErrorToast("Failed to copy. Please copy manually.");
     }
   };
   const stats: StatCardProps[] = useMemo(() => {

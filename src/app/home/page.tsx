@@ -39,6 +39,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Image from "next/image";
 
 export default function ResponsiveWeatherApp() {
   const { selectedLocation, locationData, setSelectedLocation } =
@@ -529,8 +530,16 @@ function DesktopLayout({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
               <h1 className="text-2xl text-neutral-900 flex items-center gap-2">
-                <Cloud className="size-7 text-[#2B7FFF] animate-float" />
-                <span>Weather App</span>
+                <Image
+                          src="/assets/logo.png"
+                          alt=""
+                          width={40}
+                          height={40}
+                          className="object-contain"
+                          priority
+                        />
+                {/* <Cloud className="size-7 text-[#2B7FFF] animate-float" /> */}
+                <span>AIHelp</span>
               </h1>
               <nav className="flex items-center gap-6">
                 <a

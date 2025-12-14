@@ -96,6 +96,7 @@ export default function SimulationConfig() {
           onDurationChange={handleDurationChange}
           onRunSimulation={handleRunSimulation}
           isPending={isPending}
+          onGoBack={handleGoBack}
         />
       </div>
 
@@ -132,6 +133,7 @@ function MobileLayout({
   onDurationChange,
   onRunSimulation,
   isPending,
+  onGoBack
 }: LayoutProps) {
   return (
     <div className="flex flex-col min-h-screen">
@@ -139,7 +141,7 @@ function MobileLayout({
       <StatusBar />
 
       {/* Header */}
-      <Header />
+      <Header onGoBack={onGoBack} />
 
       {/* Content */}
       <main className="flex-1 px-4 py-5 space-y-6 pb-24">
@@ -259,7 +261,10 @@ function StatusBar() {
   );
 }
 
-function Header() {
+interface MobileProps {
+  onGoBack?: () => void;
+}
+function Header({onGoBack}: MobileProps) {
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-neutral-200">
       <div className="flex items-center justify-between px-4 py-3">
@@ -267,6 +272,7 @@ function Header() {
           variant="ghost"
           size="icon"
           className="size-9 hover:bg-neutral-100"
+          onClick={onGoBack}
         >
           <ArrowLeft className="size-5" />
           <span className="sr-only">Go back</span>

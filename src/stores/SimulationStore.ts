@@ -34,8 +34,13 @@ export interface MapLegendItem {
   label: string;
 }
 
+// ✅ MỚI
 export interface MapImpactZone {
-  [key: string]: any;
+  level: "HIGH" | "MEDIUM" | "LOW" | string;
+  geometry: {
+    type: string;
+    coordinates: number[][][];
+  };
 }
 
 export interface SimulationMap {

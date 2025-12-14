@@ -23,6 +23,7 @@ import { useLocationStore as useWeatherLocationStore } from "@/stores/locationSt
 import BackButton from "@/common/back-button";
 import { ROUTES } from "@/utils/routes";
 import BackMobileButton from "@/common/back-button-custom";
+import { useRouter } from "next/navigation";
 
 // Convert Weather LocationData to Simulation LocationData
 function convertWeatherToSimulationLocation(
@@ -56,6 +57,8 @@ export default function LocationPicker() {
   const [isSearching, setIsSearching] = useState(false);
 
   const debouncedQuery = useDebounce(searchQuery, 800);
+
+  const router = useRouter();
 
   const {
     coordinates: currentCoords,
@@ -162,6 +165,8 @@ export default function LocationPicker() {
   const handleConfirmLocation = useCallback(() => {
     console.log("✅ Location confirmed:", location);
     // TODO: Save to store or navigate back with location data
+
+    router.push(ROUTES.SIMULATION_CONFIG);
   }, [location]);
 
   const handleRecenter = useCallback(() => {

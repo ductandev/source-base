@@ -5,45 +5,205 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
+// import { useSimulationStore } from "@/stores/SimulationStore";
+import { useState, useMemo } from "react";
 import {
   IMPACT_LEVELS,
-  STATS,
-  RESPONSE_ACTIONS,
+  // DEFAULT_STATS,
+  // RESPONSE_ACTIONS,
   RESPONSE_ACTION_ICONS,
 } from "./_components/constants";
 import { StatCardProps, ResponseActionProps } from "./_components/types";
 
+type LayoutProps = {
+  stats: StatCardProps[];
+  responseAction: Omit<ResponseActionProps, "icon">[];
+};
+type TopActionFromApi = {
+  rank: number;
+  title: string;
+  description: string;
+  priority?: string;
+};
 export default function SimulationResults() {
+  // const simulationResponse = useSimulationStore((s) => s.currentSimulation);
+  const [simulationResponse, setSimulationResponse] = useState({
+    data: {
+      simulationId: "a66839a3-9e01-48bc-99f1-6a558666cccf",
+      input: {
+        disasterType: "flood",
+        rainfallIntensity: "",
+        duration: 12,
+        windSpeed: 0,
+        magnitude: 0,
+        fireSpreadRate: 0,
+        location: {
+          name: "Tân Bình",
+          country: "VN",
+          countryCode: "VN",
+          lat: 10.800444,
+          lon: 106.651993,
+          displayName: "Tân Bình, Viet Nam",
+        },
+      },
+      map: {
+        center: {
+          lat: 10.800444,
+          lng: 106.651993,
+        },
+        zoom: 12,
+        legend: [
+          { level: "HIGH", label: "High Impact" },
+          { level: "MEDIUM", label: "Medium Impact" },
+          { level: "LOW", label: "Low Impact" },
+        ],
+        impactZones: [
+          {
+            level: "HIGH",
+            label: "High Impact Zone",
+            geometry: {
+              type: "Polygon",
+              coordinates: [
+                [
+                  [106.65201, 10.800454],
+                  [106.65198, 10.800454],
+                  [106.65198, 10.800434],
+                  [106.65201, 10.800434],
+                  [106.65201, 10.800454],
+                ],
+              ],
+            },
+          },
+          {
+            level: "MEDIUM",
+            label: "Medium Impact Zone",
+            geometry: {
+              type: "Polygon",
+              coordinates: [
+                [
+                  [106.65205, 10.800474],
+                  [106.65195, 10.800474],
+                  [106.65195, 10.800414],
+                  [106.65205, 10.800414],
+                  [106.65205, 10.800474],
+                ],
+              ],
+            },
+          },
+        ],
+      },
+      kpis: {
+        householdsAffected: 10,
+        roadBlockages: 1,
+        sheltersNeeded: 0,
+      },
+      topActions: [
+        {
+          rank: 1,
+          title: "Monitor Rainfall",
+          description:
+            "Continuously monitor rainfall intensity and accumulation to assess evolving flood risk.",
+          icon: "weather-rain",
+          priority: "MEDIUM",
+        },
+        {
+          rank: 2,
+          title: "Issue Public Warnings",
+          description:
+            "Communicate potential flood risks and advise residents to stay informed and prepared.",
+          icon: "bullhorn",
+          priority: "MEDIUM",
+        },
+        {
+          rank: 3,
+          title: "Check Drainage Systems",
+          description:
+            "Ensure local drainage systems are clear and functioning to mitigate localized flooding.",
+          icon: "tools",
+          priority: "LOW",
+        },
+      ],
+      responsePlan: {
+        url: "/api/simulations/a66839a3-9e01-48bc-99f1-6a558666cccf/plan",
+        scenarioId: "a66839a3-9e01-48bc-99f1-6a558666cccf",
+      },
+      generatedAt: "2025-12-13T13:30:09.085Z",
+    },
+  });
+  const stats: StatCardProps[] = useMemo(() => {
+    const kpis = simulationResponse?.data?.kpis;
+    return [
+      {
+        label: "Households Affected",
+        value: (kpis?.householdsAffected ?? 0).toLocaleString(),
+      },
+      {
+        label: "Road Blockages",
+        value: (kpis?.roadBlockages ?? 0).toLocaleString(),
+      },
+      {
+        label: "Shelters Needed",
+        value: (kpis?.sheltersNeeded ?? 0).toLocaleString(),
+      },
+    ];
+  }, [simulationResponse?.data?.kpis]);
+
+  const responseAction: Omit<ResponseActionProps, "icon">[] = useMemo(() => {
+    const actions = simulationResponse?.data?.topActions ?? [];
+
+    const priorityToColor = (p?: string) => {
+      switch ((p ?? "").toUpperCase()) {
+        case "HIGH":
+          return "blue";
+        case "MEDIUM":
+          return "green";
+        case "LOW":
+          return "purple";
+        default:
+          return "gray";
+      }
+    };
+
+    return (actions as TopActionFromApi[]).map((a) => ({
+      number: a.rank,
+      title: a.title,
+      description: a.description,
+      color: priorityToColor(a.priority),
+    }));
+  }, [simulationResponse?.data?.topActions]);
+
+  if (!simulationResponse) return <div>No simulation data</div>;
+  console.log(simulationResponse);
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Mobile Layout */}
       <div className="lg:hidden">
-        <MobileLayout />
+        <MobileLayout stats={stats} responseAction={responseAction} />
       </div>
 
       {/* Desktop Layout */}
       <div className="hidden lg:block">
-        <DesktopLayout />
+        <DesktopLayout stats={stats} responseAction={responseAction} />
       </div>
     </div>
   );
 }
 
-function MobileLayout() {
+function MobileLayout({ stats, responseAction }: LayoutProps) {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-1 px-4 py-5 space-y-4 pb-24">
         <MapSection />
-        <StatsGrid />
-        <ResponseActionsSection />
+        <StatsGrid stats={stats} />
+        <ResponseActionsSection responseAction={responseAction} />
       </main>
       <BottomCTA />
     </div>
   );
 }
 
-function DesktopLayout() {
+function DesktopLayout({ stats, responseAction }: LayoutProps) {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-50 bg-white border-b border-neutral-200 shadow-sm">
@@ -83,17 +243,11 @@ function DesktopLayout() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2 space-y-6">
             <MapSection />
-            <StatsGrid />
+            <StatsGrid stats={stats} />
           </div>
           <div className="space-y-6">
-            <ResponseActionsSection />
-            <AdditionalInsights />
+            <ResponseActionsSection responseAction={responseAction} />
           </div>
-        </div>
-        <div className="mt-8">
-          <Button className="w-full h-12 bg-[#46a758] hover:bg-[#3d9049] text-white text-base">
-            View Full Response Plan
-          </Button>
         </div>
       </div>
     </div>
@@ -174,10 +328,10 @@ function MapSection() {
   );
 }
 
-function StatsGrid() {
+function StatsGrid({ stats }: { stats: StatCardProps[] }) {
   return (
     <div className="grid grid-cols-3 gap-3 lg:gap-4">
-      {STATS.map((stat, index) => (
+      {stats.map((stat, index) => (
         <StatCard key={index} {...stat} />
       ))}
     </div>
@@ -199,14 +353,18 @@ function StatCard({ label, value }: StatCardProps) {
   );
 }
 
-function ResponseActionsSection() {
+function ResponseActionsSection({
+  responseAction,
+}: {
+  responseAction: Omit<ResponseActionProps, "icon">[];
+}) {
   return (
     <div className="space-y-4">
       <h2 className="text-base lg:text-lg font-semibold text-neutral-950">
         Top 3 Response Actions
       </h2>
       <div className="space-y-3">
-        {RESPONSE_ACTIONS.map((action) => {
+        {responseAction.map((action) => {
           const IconComponent =
             RESPONSE_ACTION_ICONS[
               action.number as keyof typeof RESPONSE_ACTION_ICONS
@@ -235,6 +393,7 @@ function ResponseActionCard({
     blue: "bg-blue-100 text-blue-600",
     green: "bg-green-100 text-green-600",
     purple: "bg-purple-100 text-purple-600",
+    gray: "bg-gray-100 text-gray-600",
   };
 
   return (
@@ -260,52 +419,6 @@ function ResponseActionCard({
   );
 }
 
-function AdditionalInsights() {
-  return (
-    <Card className="border-0 shadow-md">
-      <CardContent className="p-5 space-y-4">
-        <h3 className="text-base font-semibold text-neutral-950">
-          Impact Analysis
-        </h3>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between py-2 border-b border-neutral-100">
-            <span className="text-sm text-neutral-600">Severity Level</span>
-            <Badge variant="destructive" className="bg-[#fb2c36]">
-              High
-            </Badge>
-          </div>
-
-          <div className="flex items-center justify-between py-2 border-b border-neutral-100">
-            <span className="text-sm text-neutral-600">Response Time</span>
-            <span className="text-sm font-medium text-neutral-950">
-              2-4 hours
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between py-2 border-b border-neutral-100">
-            <span className="text-sm text-neutral-600">Affected Area</span>
-            <span className="text-sm font-medium text-neutral-950">45 km²</span>
-          </div>
-
-          <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-neutral-600">Resources Needed</span>
-            <span className="text-sm font-medium text-neutral-950">
-              Critical
-            </span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 function BottomCTA() {
-  return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 p-4 shadow-lg">
-      <Button className="w-full h-12 bg-[#46a758] hover:bg-[#3d9049] text-white text-base">
-        View Full Response Plan
-      </Button>
-    </div>
-  );
+  return <div></div>;
 }

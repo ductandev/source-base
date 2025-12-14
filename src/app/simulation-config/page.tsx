@@ -135,6 +135,14 @@ function MobileLayout({
   isPending,
   onGoBack
 }: LayoutProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleRunClick = useCallback(() => {
+    if (isSubmitting || isPending) return;
+    setIsSubmitting(true);
+    onRunSimulation();
+  }, [isSubmitting, isPending, onRunSimulation]);
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Status Bar */}
@@ -158,14 +166,16 @@ function MobileLayout({
       </main>
 
       {/* Bottom CTA */}
-      <BottomCTA onRunSimulation={onRunSimulation} isPending={isPending} />
+      <BottomCTA
+        onRunSimulation={handleRunClick}
+        isPending={isPending || isSubmitting}
+      />
 
       {/* Home Indicator */}
       <HomeIndicator />
     </div>
   );
 }
-
 function DesktopLayout({
   config,
   onDisasterTypeChange,
@@ -175,6 +185,14 @@ function DesktopLayout({
   onGoBack,
   isPending,
 }: LayoutProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleRunClick = useCallback(() => {
+    if (isSubmitting || isPending) return;
+    setIsSubmitting(true);
+    onRunSimulation();
+  }, [isSubmitting, isPending, onRunSimulation]);
+
   return (
     <div className="min-h-screen">
       {/* Desktop Header */}
@@ -226,12 +244,12 @@ function DesktopLayout({
         {/* Bottom CTA - Desktop */}
         <div className="mt-8 max-w-6xl">
           <Button
-            onClick={onRunSimulation}
-            disabled={isPending}
-            className="w-full h-12 bg-[#46a758] hover:bg-[#3d9049] text-white text-base"
+            onClick={handleRunClick}
+            disabled={isPending || isSubmitting}
+            className="w-full h-12 bg-[#46a758] hover:bg-[#3d9049] text-white text-base disabled:opacity-50 disabled:cursor-not-allowed"
             size="lg"
           >
-            {isPending ? (
+            {isPending || isSubmitting ? (
               <>
                 <Loader2 className="size-5 mr-2 animate-spin" />
                 Running Simulation...
@@ -511,7 +529,7 @@ function BottomCTA({ onRunSimulation, isPending }: BottomCTAProps) {
     <div className="fixed bottom-9 left-0 right-0 bg-white border-t border-neutral-200 p-4 shadow-lg">
       <Button
         onClick={onRunSimulation}
-        className="w-full h-9 bg-[#46a758] hover:bg-[#3d9049] text-white"
+        className="w-full h-9 bg-[#46a758] hover:bg-[#3d9049] text-white disabled:opacity-50 disabled:cursor-not-allowed"
         disabled={isPending}
       >
         {isPending ? (
@@ -526,7 +544,6 @@ function BottomCTA({ onRunSimulation, isPending }: BottomCTAProps) {
     </div>
   );
 }
-
 function HomeIndicator() {
   return (
     <div className="fixed bottom-0 left-0 right-0 h-9 bg-white flex items-center justify-center">

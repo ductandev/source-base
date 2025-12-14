@@ -5,20 +5,173 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
+// import { useSimulationStore } from "@/stores/SimulationStore";
+import { useState, useMemo } from "react";
 import {
   IMPACT_LEVELS,
-  STATS,
-  RESPONSE_ACTIONS,
-  RESPONSE_ACTION_ICONS,
+  DEFAULT_STATS,
+  // RESPONSE_ACTIONS,
+  // RESPONSE_ACTION_ICONS,
 } from "./_components/constants";
 import { StatCardProps, ResponseActionProps } from "./_components/types";
 
+type ResponseActionsSectionProps = {
+  responseActions: Omit<ResponseActionProps, "icon">[];
+};
 export default function SimulationResults() {
+  // const simulationResponse = useSimulationStore((s) => s.currentSimulation);
+  const [simulationResponse, setSimulationResponse] = useState({
+    data: {
+      simulationId: "a66839a3-9e01-48bc-99f1-6a558666cccf",
+      input: {
+        disasterType: "flood",
+        rainfallIntensity: "",
+        duration: 12,
+        windSpeed: 0,
+        magnitude: 0,
+        fireSpreadRate: 0,
+        location: {
+          name: "Tân Bình",
+          country: "VN",
+          countryCode: "VN",
+          lat: 10.800444,
+          lon: 106.651993,
+          displayName: "Tân Bình, Viet Nam",
+        },
+      },
+      map: {
+        center: {
+          lat: 10.800444,
+          lng: 106.651993,
+        },
+        zoom: 12,
+        legend: [
+          { level: "HIGH", label: "High Impact" },
+          { level: "MEDIUM", label: "Medium Impact" },
+          { level: "LOW", label: "Low Impact" },
+        ],
+        impactZones: [
+          {
+            level: "HIGH",
+            label: "High Impact Zone",
+            geometry: {
+              type: "Polygon",
+              coordinates: [
+                [
+                  [106.65201, 10.800454],
+                  [106.65198, 10.800454],
+                  [106.65198, 10.800434],
+                  [106.65201, 10.800434],
+                  [106.65201, 10.800454],
+                ],
+              ],
+            },
+          },
+          {
+            level: "MEDIUM",
+            label: "Medium Impact Zone",
+            geometry: {
+              type: "Polygon",
+              coordinates: [
+                [
+                  [106.65205, 10.800474],
+                  [106.65195, 10.800474],
+                  [106.65195, 10.800414],
+                  [106.65205, 10.800414],
+                  [106.65205, 10.800474],
+                ],
+              ],
+            },
+          },
+        ],
+      },
+      kpis: {
+        householdsAffected: 10,
+        roadBlockages: 1,
+        sheltersNeeded: 0,
+      },
+      topActions: [
+        {
+          rank: 1,
+          title: "Monitor Rainfall",
+          description:
+            "Continuously monitor rainfall intensity and accumulation to assess evolving flood risk.",
+          icon: "weather-rain",
+          priority: "MEDIUM",
+        },
+        {
+          rank: 2,
+          title: "Issue Public Warnings",
+          description:
+            "Communicate potential flood risks and advise residents to stay informed and prepared.",
+          icon: "bullhorn",
+          priority: "MEDIUM",
+        },
+        {
+          rank: 3,
+          title: "Check Drainage Systems",
+          description:
+            "Ensure local drainage systems are clear and functioning to mitigate localized flooding.",
+          icon: "tools",
+          priority: "LOW",
+        },
+      ],
+      responsePlan: {
+        url: "/api/simulations/a66839a3-9e01-48bc-99f1-6a558666cccf/plan",
+        scenarioId: "a66839a3-9e01-48bc-99f1-6a558666cccf",
+      },
+      generatedAt: "2025-12-13T13:30:09.085Z",
+    },
+  });
+  const stats: StatCardProps[] = useMemo(() => {
+    const kpis = simulationResponse?.data?.kpis;
+    return [
+      {
+        label: "Households Affected",
+        value: (kpis?.householdsAffected ?? 0).toLocaleString(),
+      },
+      {
+        label: "Road Blockages",
+        value: (kpis?.roadBlockages ?? 0).toLocaleString(),
+      },
+      {
+        label: "Shelters Needed",
+        value: (kpis?.sheltersNeeded ?? 0).toLocaleString(),
+      },
+    ];
+  }, [simulationResponse?.data?.kpis]);
+
+  const responseAction: Omit<ResponseActionProps, "icon">[] = useMemo(() => {
+    const actions = simulationResponse?.data?.topActions ?? [];
+
+    const priorityToColor = (p?: string) => {
+      switch ((p ?? "").toUpperCase()) {
+        case "HIGH":
+          return "blue";
+        case "MEDIUM":
+          return "green";
+        case "LOW":
+          return "purple";
+        default:
+          return "gray";
+      }
+    };
+
+    return actions.map((a: any) => ({
+      number: a.rank,
+      title: a.title,
+      description: a.description,
+      color: priorityToColor(a.priority),
+    }));
+  }, [simulationResponse?.data?.topActions]);
+
+  if (!simulationResponse) return <div>No simulation data</div>;
+  console.log(simulationResponse);
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Mobile Layout */}
       <div className="lg:hidden">
-        <MobileLayout />
+        <MobileLayout stats={stats} responseAction={responseAction} />
       </div>
 
       {/* Desktop Layout */}
@@ -29,14 +182,17 @@ export default function SimulationResults() {
   );
 }
 
-function MobileLayout() {
+function MobileLayout(
+  { stats }: { stats: StatCardProps[] },
+  { responseAction }: { responseAction: ResponseActionsSectionProps },
+) {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-1 px-4 py-5 space-y-4 pb-24">
         <MapSection />
-        <StatsGrid />
-        <ResponseActionsSection />
+        <StatsGrid stats={stats} />
+        <ResponseActionsSection responseAction />
       </main>
       <BottomCTA />
     </div>
@@ -89,11 +245,6 @@ function DesktopLayout() {
             <ResponseActionsSection />
             <AdditionalInsights />
           </div>
-        </div>
-        <div className="mt-8">
-          <Button className="w-full h-12 bg-[#46a758] hover:bg-[#3d9049] text-white text-base">
-            View Full Response Plan
-          </Button>
         </div>
       </div>
     </div>
@@ -174,10 +325,10 @@ function MapSection() {
   );
 }
 
-function StatsGrid() {
+function StatsGrid({ stats }: { stats: StatCardProps[] }) {
   return (
     <div className="grid grid-cols-3 gap-3 lg:gap-4">
-      {STATS.map((stat, index) => (
+      {stats.map((stat, index) => (
         <StatCard key={index} {...stat} />
       ))}
     </div>
@@ -206,7 +357,7 @@ function ResponseActionsSection() {
         Top 3 Response Actions
       </h2>
       <div className="space-y-3">
-        {RESPONSE_ACTIONS.map((action) => {
+        {responseAction.map((action) => {
           const IconComponent =
             RESPONSE_ACTION_ICONS[
               action.number as keyof typeof RESPONSE_ACTION_ICONS
@@ -301,11 +452,5 @@ function AdditionalInsights() {
 }
 
 function BottomCTA() {
-  return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 p-4 shadow-lg">
-      <Button className="w-full h-12 bg-[#46a758] hover:bg-[#3d9049] text-white text-base">
-        View Full Response Plan
-      </Button>
-    </div>
-  );
+  return <div></div>;
 }

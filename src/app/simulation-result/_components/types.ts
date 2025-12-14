@@ -8,7 +8,7 @@ export interface ResponseActionProps {
   title: string;
   description: string;
   icon: React.ReactNode;
-  color: "blue" | "green" | "purple";
+  color: "blue" | "green" | "purple" | "gray";
 }
 
 export interface ImpactLevel {

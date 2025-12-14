@@ -7,10 +7,10 @@ export const IMPACT_LEVELS: ImpactLevel[] = [
   { label: "Low Impact", color: "bg-[#f0b100]" },
 ];
 
-export const STATS: StatCardProps[] = [
-  { label: "Households Affected", value: "1,500" },
-  { label: "Road Blockages", value: "42" },
-  { label: "Shelters Needed", value: "3,200" },
+export const DEFAULT_STATS: StatCardProps[] = [
+  { label: "Households Affected", value: "0" },
+  { label: "Road Blockages", value: "0" },
+  { label: "Shelters Needed", value: "0" },
 ];
 
 export const RESPONSE_ACTIONS: Omit<ResponseActionProps, "icon">[] = [

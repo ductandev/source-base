@@ -11,6 +11,7 @@ import { StatCardProps, ResponseActionProps } from "./_components/types";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/utils/routes";
 import GoongClusteredMap from "@/app/simulation-result/_components/GoongPointClusterMap";
+import GoongHeatmap from "@/app/simulation-result/_components/GoongHeatmap";
 
 type LayoutProps = {
   stats: StatCardProps[];
@@ -245,7 +246,7 @@ function MapSection() {
   return (
     <Card className="overflow-hidden border-0 shadow-md">
       <div className="relative h-[271px] lg:h-[400px]">
-        <GoongClusteredMap
+        <GoongHeatmap
           mapData={simulationResponse.map}
           totalHouseholds={simulationResponse.kpis?.householdsAffected || 0}
           className="w-full h-full"

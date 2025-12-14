@@ -9,14 +9,21 @@ import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
 import { useState, useMemo } from "react";
 import {
   IMPACT_LEVELS,
-  DEFAULT_STATS,
+  // DEFAULT_STATS,
   // RESPONSE_ACTIONS,
-  // RESPONSE_ACTION_ICONS,
+  RESPONSE_ACTION_ICONS,
 } from "./_components/constants";
 import { StatCardProps, ResponseActionProps } from "./_components/types";
 
-type ResponseActionsSectionProps = {
-  responseActions: Omit<ResponseActionProps, "icon">[];
+type LayoutProps = {
+  stats: StatCardProps[];
+  responseAction: Omit<ResponseActionProps, "icon">[];
+};
+type TopActionFromApi = {
+  rank: number;
+  title: string;
+  description: string;
+  priority?: string;
 };
 export default function SimulationResults() {
   // const simulationResponse = useSimulationStore((s) => s.currentSimulation);
@@ -157,7 +164,7 @@ export default function SimulationResults() {
       }
     };
 
-    return actions.map((a: any) => ({
+    return (actions as TopActionFromApi[]).map((a) => ({
       number: a.rank,
       title: a.title,
       description: a.description,
@@ -176,30 +183,27 @@ export default function SimulationResults() {
 
       {/* Desktop Layout */}
       <div className="hidden lg:block">
-        <DesktopLayout />
+        <DesktopLayout stats={stats} responseAction={responseAction} />
       </div>
     </div>
   );
 }
 
-function MobileLayout(
-  { stats }: { stats: StatCardProps[] },
-  { responseAction }: { responseAction: ResponseActionsSectionProps },
-) {
+function MobileLayout({ stats, responseAction }: LayoutProps) {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-1 px-4 py-5 space-y-4 pb-24">
         <MapSection />
         <StatsGrid stats={stats} />
-        <ResponseActionsSection responseAction />
+        <ResponseActionsSection responseAction={responseAction} />
       </main>
       <BottomCTA />
     </div>
   );
 }
 
-function DesktopLayout() {
+function DesktopLayout({ stats, responseAction }: LayoutProps) {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-50 bg-white border-b border-neutral-200 shadow-sm">
@@ -239,11 +243,10 @@ function DesktopLayout() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2 space-y-6">
             <MapSection />
-            <StatsGrid />
+            <StatsGrid stats={stats} />
           </div>
           <div className="space-y-6">
-            <ResponseActionsSection />
-            <AdditionalInsights />
+            <ResponseActionsSection responseAction={responseAction} />
           </div>
         </div>
       </div>
@@ -350,7 +353,11 @@ function StatCard({ label, value }: StatCardProps) {
   );
 }
 
-function ResponseActionsSection() {
+function ResponseActionsSection({
+  responseAction,
+}: {
+  responseAction: Omit<ResponseActionProps, "icon">[];
+}) {
   return (
     <div className="space-y-4">
       <h2 className="text-base lg:text-lg font-semibold text-neutral-950">
@@ -386,6 +393,7 @@ function ResponseActionCard({
     blue: "bg-blue-100 text-blue-600",
     green: "bg-green-100 text-green-600",
     purple: "bg-purple-100 text-purple-600",
+    gray: "bg-gray-100 text-gray-600",
   };
 
   return (
@@ -404,46 +412,6 @@ function ResponseActionCard({
             <p className="text-xs text-neutral-500 leading-relaxed">
               {description}
             </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function AdditionalInsights() {
-  return (
-    <Card className="border-0 shadow-md">
-      <CardContent className="p-5 space-y-4">
-        <h3 className="text-base font-semibold text-neutral-950">
-          Impact Analysis
-        </h3>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between py-2 border-b border-neutral-100">
-            <span className="text-sm text-neutral-600">Severity Level</span>
-            <Badge variant="destructive" className="bg-[#fb2c36]">
-              High
-            </Badge>
-          </div>
-
-          <div className="flex items-center justify-between py-2 border-b border-neutral-100">
-            <span className="text-sm text-neutral-600">Response Time</span>
-            <span className="text-sm font-medium text-neutral-950">
-              2-4 hours
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between py-2 border-b border-neutral-100">
-            <span className="text-sm text-neutral-600">Affected Area</span>
-            <span className="text-sm font-medium text-neutral-950">45 km²</span>
-          </div>
-
-          <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-neutral-600">Resources Needed</span>
-            <span className="text-sm font-medium text-neutral-950">
-              Critical
-            </span>
           </div>
         </div>
       </CardContent>

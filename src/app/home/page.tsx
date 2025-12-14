@@ -26,6 +26,7 @@ import { LocationSearchDropdown } from "@/app/home/_components/LocationSearchDro
 import { LocationPermissionDialog } from "@/app/home/_components/LocationPermissionDialog";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/utils/routes";
+import Link from "next/link";
 
 export default function ResponsiveWeatherApp() {
   const { selectedLocation, locationData, setSelectedLocation } =
@@ -488,7 +489,7 @@ function DesktopLayout({
                   Home
                 </a>
                 <a
-                  href="./whatif"
+                  href={ROUTES.WHAT_IF}
                   className="text-sm text-neutral-600 hover:text-[#2B7FFF] transition-colors"
                 >
                   What If
@@ -995,51 +996,56 @@ function QuickStats({ highlights }: any) {
 }
 
 function BottomTabBar() {
+  const useRoute = useRouter()
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-neutral-200 px-6 pt-3 pb-6 rounded-t-[32px] shadow-[0px_-4px_20px_0px_rgba(0,0,0,0.08)] animate-slideInLeft">
       <div className="flex items-center justify-between max-w-md mx-auto">
         <TabButton icon={<Cloud className="size-6" />} label="Simulation" />
-        <TabButton
-          icon={
-            <svg
-              className="size-6"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-          }
-          label="What If"
-        />
-        <TabButton
-          icon={
-            <svg
-              className="size-7"
-              viewBox="0 0 28 28"
-              fill="none"
-              stroke="white"
-              strokeWidth="2.1"
-            >
-              <circle
-                cx="14"
-                cy="14"
-                r="11.67"
-                fill="white"
-                fillOpacity="0.3"
-              />
-              <path
-                d="M14 2.33C11 5.48 9.33 9.66 9.33 14s1.67 8.52 4.67 11.67C16.99 22.52 18.67 18.34 18.67 14S16.99 5.48 14 2.33z"
-                fill="white"
-                fillOpacity="0.3"
-              />
-              <path d="M2.33 14h23.34" />
-            </svg>
-          }
-          label="Home"
-          active
-        />
+        <Link href={ROUTES.WHAT_IF}>
+          <TabButton
+            icon={
+              <svg
+                className="size-6"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+            }
+            label="What If"
+          />
+        </Link>
+        <Link href='/home'>
+          <TabButton
+            icon={
+              <svg
+                className="size-7"
+                viewBox="0 0 28 28"
+                fill="none"
+                stroke="white"
+                strokeWidth="2.1"
+              >
+                <circle
+                  cx="14"
+                  cy="14"
+                  r="11.67"
+                  fill="white"
+                  fillOpacity="0.3"
+                />
+                <path
+                  d="M14 2.33C11 5.48 9.33 9.66 9.33 14s1.67 8.52 4.67 11.67C16.99 22.52 18.67 18.34 18.67 14S16.99 5.48 14 2.33z"
+                  fill="white"
+                  fillOpacity="0.3"
+                />
+                <path d="M2.33 14h23.34" />
+              </svg>
+            }
+            label="Home"
+            active
+          />
+        </Link>
         <TabButton
           icon={
             <svg

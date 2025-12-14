@@ -1,5 +1,12 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+
+export type DisasterType =
+  | "wildfire"
+  | "earthquake"
+  | "flood"
+  | "storm"
+  | string;
 
 export interface LocationData {
   name: string;
@@ -11,13 +18,6 @@ export interface LocationData {
   displayName: string;
   localNames?: Record<string, string>;
 }
-
-export type DisasterType =
-  | "wildfire"
-  | "earthquake"
-  | "flood"
-  | "storm"
-  | string;
 
 export interface SimulationInput {
   disasterType: DisasterType;
@@ -83,68 +83,6 @@ export interface LocationData {
   lon: number;
   displayName: string;
   localNames?: Record<string, string>;
-}
-
-export type DisasterType =
-  | "wildfire"
-  | "earthquake"
-  | "flood"
-  | "storm"
-  | string;
-
-export interface SimulationInput {
-  disasterType: DisasterType;
-  rainfallIntensity: string;
-  duration: number;
-  windSpeed: number;
-  magnitude: number;
-  fireSpreadRate: number;
-  location: LocationData;
-}
-
-export interface MapLegendItem {
-  level: "HIGH" | "MEDIUM" | "LOW" | string;
-  label: string;
-}
-
-export interface MapImpactZone {
-  [key: string]: any;
-}
-
-export interface SimulationMap {
-  center: { lat: number; lng: number };
-  zoom: number;
-  legend: MapLegendItem[];
-  impactZones: MapImpactZone[];
-}
-
-export interface SimulationKPIs {
-  householdsAffected: number;
-  roadBlockages: number;
-  sheltersNeeded: number;
-}
-
-export interface SimulationTopAction {
-  rank: number;
-  title: string;
-  description: string;
-  icon: "FIRE" | "TRUCK" | "WIND" | string;
-  priority: "HIGH" | "MEDIUM" | "LOW" | string;
-}
-
-export interface SimulationResponsePlan {
-  url: string;
-  scenarioId: string;
-}
-
-export interface SimulationResult {
-  simulationId: string;
-  input: SimulationInput;
-  map: SimulationMap;
-  kpis: SimulationKPIs;
-  topActions: SimulationTopAction[];
-  responsePlan: SimulationResponsePlan;
-  generatedAt: string; // ISO
 }
 
 interface SimulationState {

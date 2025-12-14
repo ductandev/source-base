@@ -16,6 +16,8 @@ import {
   Thermometer,
   Sun,
   CloudRain,
+  Menu,
+  LogOut,
 } from "lucide-react";
 import dayjs from "dayjs";
 import { useWeatherData } from "@/api/openWeather";
@@ -26,6 +28,16 @@ import { LocationSearchDropdown } from "@/app/home/_components/LocationSearchDro
 import { LocationPermissionDialog } from "@/app/home/_components/LocationPermissionDialog";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/utils/routes";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function ResponsiveWeatherApp() {
   const { selectedLocation, locationData, setSelectedLocation } =
@@ -39,8 +51,6 @@ export default function ResponsiveWeatherApp() {
 
   const geolocation = useGeolocation(allowGeolocation);
 
-  const router = useRouter();
-
   const {
     currentWeather,
     hourlyForecast,
@@ -51,6 +61,8 @@ export default function ResponsiveWeatherApp() {
     isError,
     error,
   } = useWeatherData(selectedLocation);
+
+  const router = useRouter();
 
   // Check localStorage for permission preference
   useEffect(() => {
@@ -90,6 +102,20 @@ export default function ResponsiveWeatherApp() {
     }
   }, [geolocation.location, geolocation.loading, setSelectedLocation]);
 
+  const handleGoHome = () => {
+    window.location.reload();
+  };
+
+  const handleLogout = () => {
+    // Clear localStorage
+    localStorage.clear();
+    // Hoặc clear specific items nếu cần
+    // localStorage.removeItem('token');
+    // localStorage.removeItem('user');
+    // Redirect về trang chủ
+    router.push("/");
+  };
+
   const handleAllowLocation = () => {
     localStorage.setItem("location-permission", "allowed");
     setAllowGeolocation(true);
@@ -100,10 +126,6 @@ export default function ResponsiveWeatherApp() {
     localStorage.setItem("location-permission", "denied");
     setSelectedLocation("Tân Bình");
     setHasCheckedPermission(true);
-  };
-
-  const handleGoToStimulationPicker = () => {
-    router.push(ROUTES.STIMULATION_PICKER);
   };
 
   // Show permission dialog first
@@ -145,6 +167,9 @@ export default function ResponsiveWeatherApp() {
           <p className="text-neutral-600">
             {error?.message || "An unknown error occurred"}
           </p>
+          <Button className="mt-6" onClick={handleGoHome}>
+            Home
+          </Button>
         </div>
       </div>
     );
@@ -163,6 +188,7 @@ export default function ResponsiveWeatherApp() {
           location={locationData?.displayName || selectedLocation}
           showMobileSearch={showMobileSearch}
           setShowMobileSearch={setShowMobileSearch}
+          handleLogout={handleLogout}
         />
       </div>
 
@@ -175,6 +201,7 @@ export default function ResponsiveWeatherApp() {
           highlights={todayHighlights}
           alerts={alerts}
           location={locationData?.displayName || selectedLocation}
+          handleLogout={handleLogout}
         />
       </div>
 
@@ -345,6 +372,7 @@ function MobileLayout({
   location,
   showMobileSearch,
   setShowMobileSearch,
+  handleLogout,
 }: any) {
   return (
     <div className="relative min-h-screen bg-neutral-100 pb-[106px]">
@@ -366,15 +394,37 @@ function MobileLayout({
               </div>
             </div>
           </div>
-          <div className="relative animate-scaleIn">
-            <button className="size-11 bg-white rounded-full shadow-sm flex items-center justify-center hover:scale-110 transition-transform">
-              <Bell className="size-5 text-[#364153]" />
-            </button>
-            {alerts && alerts.length > 0 && (
-              <div className="absolute -top-1 -right-1 bg-[#ff6900] size-5 rounded-full flex items-center justify-center text-white text-[10px] animate-pulse">
-                {alerts.length}
-              </div>
-            )}
+          <div className="flex gap-3">
+            <div className="relative animate-scaleIn">
+              <button className="size-10 bg-white rounded-full shadow-sm flex items-center justify-center hover:scale-110 transition-transform">
+                <Bell className="size-5 text-[#364153]" />
+              </button>
+              {alerts && alerts.length > 0 && (
+                <div className="absolute -top-1 -right-1 bg-[#ff6900] size-5 rounded-full flex items-center justify-center text-white text-[10px] animate-pulse">
+                  {alerts.length}
+                </div>
+              )}
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  className="size-10 bg-neutral-100 rounded-full flex items-center justify-center hover:bg-neutral-200 transition-all hover:scale-110"
+                  variant="outline"
+                >
+                  <Menu className="size-5 text-[#364153]" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-44" align="start">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  Log out
+                  <DropdownMenuShortcut>
+                    <LogOut className="size-5 text-[#364153]" />
+                  </DropdownMenuShortcut>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
@@ -468,6 +518,7 @@ function DesktopLayout({
   highlights,
   alerts,
   location,
+  handleLogout,
 }: any) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100">
@@ -513,6 +564,26 @@ function DesktopLayout({
                   </div>
                 )}
               </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    className="size-10 bg-neutral-100 rounded-full flex items-center justify-center hover:bg-neutral-200 transition-all hover:scale-110"
+                    variant="outline"
+                  >
+                    <Menu className="size-5 text-[#364153]" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-44" align="start">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    Log out
+                    <DropdownMenuShortcut>
+                      <LogOut className="size-5 text-[#364153]" />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -797,12 +868,12 @@ function InfoCard({
   value: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-4 lg:p-5 hover:shadow-md transition-all hover:scale-105">
+    <div className="bg-white rounded-2xl shadow-sm p-3 sm:p-4 lg:p-5 hover:shadow-md transition-all hover:scale-105">
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2 text-[#6a7282]">{icon}</div>
         <div>
           <p className="text-xs lg:text-sm text-[#6a7282] mb-1">{label}</p>
-          <p className="text-xl lg:text-2xl text-neutral-900 font-medium">
+          <p className="text-lg md:text-xl lg:text-2xl text-neutral-900 font-medium">
             {value}
           </p>
         </div>
@@ -995,10 +1066,20 @@ function QuickStats({ highlights }: any) {
 }
 
 function BottomTabBar() {
+  const router = useRouter();
+
+  const handleGoToStimulationPicker = () => {
+    router.push(ROUTES.STIMULATION_PICKER);
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-neutral-200 px-6 pt-3 pb-6 rounded-t-[32px] shadow-[0px_-4px_20px_0px_rgba(0,0,0,0.08)] animate-slideInLeft">
       <div className="flex items-center justify-between max-w-md mx-auto">
-        <TabButton icon={<Cloud className="size-6" />} label="Simulation" />
+        <TabButton
+          onclickGoto={handleGoToStimulationPicker}
+          icon={<Cloud className="size-6" />}
+          label="Simulation"
+        />
         <TabButton
           icon={
             <svg
@@ -1082,13 +1163,18 @@ function TabButton({
   icon,
   label,
   active,
+  onclickGoto,
 }: {
   icon: React.ReactNode;
   label: string;
   active?: boolean;
+  onclickGoto?: () => void;
 }) {
   return (
-    <button className="flex flex-col items-center gap-1.5 relative group">
+    <button
+      onClick={onclickGoto}
+      className="flex flex-col items-center gap-1.5 relative group"
+    >
       {active && (
         <>
           <div className="absolute -top-2 size-1 bg-[#00c950] rounded-full animate-pulse" />

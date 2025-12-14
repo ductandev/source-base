@@ -40,9 +40,34 @@ function convertWeatherToSimulationLocation(
   };
 }
 
+// Convert Simulation LocationData to Weather LocationData
+function convertSimulationToWeatherLocation(
+  simLocation: LocationData,
+  placeDetail?: any,
+) {
+  // Parse address để lấy name
+  const addressParts = simLocation.address.split(",");
+  const name = addressParts[0]?.trim() || simLocation.address;
+
+  return {
+    name: name,
+    country: placeDetail?.country || "VN",
+    countryCode: placeDetail?.country || "VN",
+    state:
+      placeDetail?.compound?.province || addressParts[1]?.trim() || undefined,
+    lat: simLocation.coordinates.lat,
+    lon: simLocation.coordinates.lng,
+    displayName: simLocation.address,
+    localNames: placeDetail?.local_names || undefined,
+  };
+}
+
 export default function LocationPicker() {
   // ⚠️ CRITICAL: Lấy location từ weather locationStore (đã lưu từ home)
-  const { locationData: weatherLocationData } = useWeatherLocationStore();
+  const {
+    locationData: weatherLocationData,
+    setSelectedLocation: setWeatherLocation,
+  } = useWeatherLocationStore();
 
   // Convert và set initial location
   const initialLocation = convertWeatherToSimulationLocation(
@@ -55,6 +80,7 @@ export default function LocationPicker() {
   const [location, setLocation] = useState<LocationData>(initialLocation);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [lastPlaceDetail, setLastPlaceDetail] = useState<any>(null);
 
   const debouncedQuery = useDebounce(searchQuery, 800);
 
@@ -109,6 +135,7 @@ export default function LocationPicker() {
               address: place.formatted_address,
               coordinates: newLocation.coordinates,
             });
+            setLastPlaceDetail(place);
           }
         } catch (error) {
           console.error("Reverse geocode error:", error);
@@ -133,6 +160,7 @@ export default function LocationPicker() {
             lng: place.geometry.location.lng,
           },
         });
+        setLastPlaceDetail(place);
       }
     } catch (error) {
       console.error("Get place detail error:", error);
@@ -163,11 +191,17 @@ export default function LocationPicker() {
   }, [currentCoords, getCurrentLocation]);
 
   const handleConfirmLocation = useCallback(() => {
-    console.log("✅ Location confirmed:", location);
-    // TODO: Save to store or navigate back with location data
+    // Convert và lưu vào weather location store
+    const weatherLocationData = convertSimulationToWeatherLocation(
+      location,
+      lastPlaceDetail,
+    );
+    // Lưu vào store
+    setWeatherLocation(weatherLocationData.name, weatherLocationData);
 
+    // Navigate to simulation config
     router.push(ROUTES.SIMULATION_CONFIG);
-  }, [location]);
+  }, [location, lastPlaceDetail, setWeatherLocation, router]);
 
   const handleRecenter = useCallback(() => {
     setLocation({ ...location });

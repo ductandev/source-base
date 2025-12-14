@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useTransition } from "react";
-import { ArrowLeft, Info } from "lucide-react";
+import { ArrowLeft, Info, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import axios from "axios";
@@ -46,6 +46,10 @@ export default function SimulationConfig() {
     setConfig((prev) => ({ ...prev, disasterType: value as DisasterType }));
   }, []);
 
+  const handleGoBack = () => {
+    router.push(ROUTES.STIMULATION_PICKER);
+  };
+
   const handleRainfallChange = useCallback((value: string) => {
     setConfig((prev) => ({ ...prev, rainfallIntensity: value }));
   }, []);
@@ -89,6 +93,7 @@ export default function SimulationConfig() {
           onRainfallChange={handleRainfallChange}
           onDurationChange={handleDurationChange}
           onRunSimulation={handleRunSimulation}
+          isPending={isPending}
         />
       </div>
 
@@ -100,6 +105,8 @@ export default function SimulationConfig() {
           onRainfallChange={handleRainfallChange}
           onDurationChange={handleDurationChange}
           onRunSimulation={handleRunSimulation}
+          onGoBack={handleGoBack}
+          isPending={isPending}
         />
       </div>
     </div>
@@ -112,6 +119,8 @@ interface LayoutProps {
   onRainfallChange: (value: string) => void;
   onDurationChange: (value: number[]) => void;
   onRunSimulation: () => void;
+  onGoBack?: () => void;
+  isPending?: boolean;
 }
 
 function MobileLayout({
@@ -120,6 +129,7 @@ function MobileLayout({
   onRainfallChange,
   onDurationChange,
   onRunSimulation,
+  isPending,
 }: LayoutProps) {
   return (
     <div className="flex flex-col min-h-screen">
@@ -144,7 +154,7 @@ function MobileLayout({
       </main>
 
       {/* Bottom CTA */}
-      <BottomCTA onRunSimulation={onRunSimulation} />
+      <BottomCTA onRunSimulation={onRunSimulation} isPending={isPending} />
 
       {/* Home Indicator */}
       <HomeIndicator />
@@ -158,6 +168,8 @@ function DesktopLayout({
   onRainfallChange,
   onDurationChange,
   onRunSimulation,
+  onGoBack,
+  isPending,
 }: LayoutProps) {
   return (
     <div className="min-h-screen">
@@ -169,6 +181,7 @@ function DesktopLayout({
               variant="ghost"
               size="icon"
               className="hover:bg-neutral-100"
+              onClick={onGoBack}
             >
               <ArrowLeft className="size-5" />
               <span className="sr-only">Go back</span>
@@ -210,10 +223,18 @@ function DesktopLayout({
         <div className="mt-8 max-w-6xl">
           <Button
             onClick={onRunSimulation}
+            disabled={isPending}
             className="w-full h-12 bg-[#46a758] hover:bg-[#3d9049] text-white text-base"
             size="lg"
           >
-            Run Simulation
+            {isPending ? (
+              <>
+                <Loader2 className="size-5 mr-2 animate-spin" />
+                Running Simulation...
+              </>
+            ) : (
+              "Run Simulation"
+            )}
           </Button>
         </div>
       </div>
@@ -472,14 +493,27 @@ function PreviewCard({ config }: { config: SimulationConfig }) {
   );
 }
 
-function BottomCTA({ onRunSimulation }: { onRunSimulation: () => void }) {
+interface BottomCTAProps {
+  onRunSimulation: () => void;
+  isPending?: boolean;
+}
+
+function BottomCTA({ onRunSimulation, isPending }: BottomCTAProps) {
   return (
     <div className="fixed bottom-9 left-0 right-0 bg-white border-t border-neutral-200 p-4 shadow-lg">
       <Button
         onClick={onRunSimulation}
         className="w-full h-9 bg-[#46a758] hover:bg-[#3d9049] text-white"
+        disabled={isPending}
       >
-        Run Simulation
+        {isPending ? (
+          <>
+            <Loader2 className="size-4 mr-2 animate-spin" />
+            Running...
+          </>
+        ) : (
+          "Run Simulation"
+        )}
       </Button>
     </div>
   );

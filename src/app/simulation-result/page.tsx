@@ -14,10 +14,13 @@ import {
   RESPONSE_ACTION_ICONS,
 } from "./_components/constants";
 import { StatCardProps, ResponseActionProps } from "./_components/types";
+import { useRouter } from "next/navigation";
+import { ROUTES } from "@/utils/routes";
 
 type LayoutProps = {
   stats: StatCardProps[];
   responseAction: Omit<ResponseActionProps, "icon">[];
+  onGoBack?: () => void;
 };
 type TopActionFromApi = {
   rank: number;
@@ -130,6 +133,9 @@ export default function SimulationResults() {
       generatedAt: "2025-12-13T13:30:09.085Z",
     },
   });
+
+  const router = useRouter();
+
   const stats: StatCardProps[] = useMemo(() => {
     const kpis = simulationResponse?.data?.kpis;
     return [
@@ -147,6 +153,10 @@ export default function SimulationResults() {
       },
     ];
   }, [simulationResponse?.data?.kpis]);
+
+  const handleGoBack = () => {
+    router.push(ROUTES.SIMULATION_CONFIG);
+  };
 
   const responseAction: Omit<ResponseActionProps, "icon">[] = useMemo(() => {
     const actions = simulationResponse?.data?.topActions ?? [];
@@ -178,21 +188,29 @@ export default function SimulationResults() {
     <div className="min-h-screen bg-neutral-50">
       {/* Mobile Layout */}
       <div className="lg:hidden">
-        <MobileLayout stats={stats} responseAction={responseAction} />
+        <MobileLayout
+          onGoBack={handleGoBack}
+          stats={stats}
+          responseAction={responseAction}
+        />
       </div>
 
       {/* Desktop Layout */}
       <div className="hidden lg:block">
-        <DesktopLayout stats={stats} responseAction={responseAction} />
+        <DesktopLayout
+          onGoBack={handleGoBack}
+          stats={stats}
+          responseAction={responseAction}
+        />
       </div>
     </div>
   );
 }
 
-function MobileLayout({ stats, responseAction }: LayoutProps) {
+function MobileLayout({ stats, responseAction, onGoBack }: LayoutProps) {
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
+      <Header onGoBack={onGoBack} />
       <main className="flex-1 px-4 py-5 space-y-4 pb-24">
         <MapSection />
         <StatsGrid stats={stats} />
@@ -203,7 +221,7 @@ function MobileLayout({ stats, responseAction }: LayoutProps) {
   );
 }
 
-function DesktopLayout({ stats, responseAction }: LayoutProps) {
+function DesktopLayout({ stats, responseAction, onGoBack }: LayoutProps) {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-50 bg-white border-b border-neutral-200 shadow-sm">
@@ -214,6 +232,7 @@ function DesktopLayout({ stats, responseAction }: LayoutProps) {
                 variant="ghost"
                 size="icon"
                 className="hover:bg-neutral-100"
+                onClick={onGoBack}
               >
                 <ArrowLeft className="size-5" />
                 <span className="sr-only">Go back</span>
@@ -254,7 +273,11 @@ function DesktopLayout({ stats, responseAction }: LayoutProps) {
   );
 }
 
-function Header() {
+interface HeaderProps {
+  onGoBack?: () => void;
+}
+
+function Header({ onGoBack }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-neutral-200">
       <div className="flex items-center justify-between px-4 py-3">
@@ -262,6 +285,7 @@ function Header() {
           variant="ghost"
           size="icon"
           className="size-9 hover:bg-neutral-100"
+          onClick={onGoBack}
         >
           <ArrowLeft className="size-5" />
           <span className="sr-only">Go back</span>

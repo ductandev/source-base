@@ -28,10 +28,10 @@ export default function App() {
 
     startTransition(async () => {
       try {
-        // await mutateLogin({
-        //   email: email,
-        //   password: password,
-        // });
+        await mutateLogin({
+          email: email,
+          password: password,
+        });
 
         showSuccessToast("Login Successful");
         router.push(ROUTES.HOME);

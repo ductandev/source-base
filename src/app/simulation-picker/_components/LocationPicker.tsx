@@ -354,7 +354,7 @@ function DesktopLayout({
         <div className="p-6 border-t border-neutral-200">
           <Button
             onClick={onConfirm}
-            className="w-full h-12 bg-[#94ce9a] hover:bg-[#7db882] text-neutral-900"
+            className="w-full h-12 bg-[#46a758] hover:bg-[#3d9049] text-white"
             size="lg"
           >
             <MapPin className="size-5 mr-2" />
@@ -554,7 +554,7 @@ function BottomSheet({ location, onConfirm }: BottomSheetProps) {
         {/* Action Button */}
         <Button
           onClick={onConfirm}
-          className="w-[200px] h-9 bg-[#94ce9a] hover:bg-[#7db882] text-neutral-900"
+          className="w-[200px] h-9 bg-[#46a758] hover:bg-[#3d9049] text-white"
         >
           Confirm Location
         </Button>
